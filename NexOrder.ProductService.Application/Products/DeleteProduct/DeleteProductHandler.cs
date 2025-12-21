@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace NexOrder.ProductService.Application.Products.DeleteProduct
 {
-    public class DeleteProductHandler : RequestHandlerBase<DeleteProductCommand, CustomResponse<DeleteProductResult>>>
+    public class DeleteProductHandler : RequestHandlerBase<DeleteProductCommand, CustomResponse<DeleteProductResult>>
     {
         private readonly IProductRepo productRepo;
         private readonly ILogger<DeleteProductHandler> logger;
