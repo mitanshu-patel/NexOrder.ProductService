@@ -1,0 +1,14 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/NexOrder.ProductService.Application/obj
+/NexOrder.ProductService.Infrastructure/obj
+/NexOrder.ProductService.Shared/obj
+/NexOrder.ProductService.Application/bin/Debug/net8.0
+/NexOrder.ProductService.Domain/bin/Debug/net8.0
+/NexOrder.ProductService.Domain/obj
+/NexOrder.ProductService.Infrastructure/bin/Debug/net8.0
+/NexOrder.ProductService.Shared/bin/Debug/net8.0
+/NexOrder.ProductService.Infrastructure/local.settings.json
