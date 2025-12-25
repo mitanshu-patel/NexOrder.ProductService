@@ -71,7 +71,7 @@ NexOrder.ProductService participates in an **event-driven architecture** using *
 
 When a product is updated, the service publishes a domain event to Azure Service Bus:
 
-- **Topic:** `productevents`
+- **Topic:** `productserviceevents`
 - **Event Type:** `ProductUpdated`
 - **Message Contract Library:** `NexOrder.ProductService.Messages`
 
