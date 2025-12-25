@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexOrder.ProductService.Inf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexOrder.ProductService.Shared", "NexOrder.ProductService.Shared\NexOrder.ProductService.Shared.csproj", "{4AF17EFC-EB04-D0FB-347E-06D91F4B013B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexOrder.ProductService.Messages", "NexOrder.ProductService.Messages\NexOrder.ProductService.Messages.csproj", "{F77BE0DE-CA2C-4331-A0B6-67DB859F68D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{4AF17EFC-EB04-D0FB-347E-06D91F4B013B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AF17EFC-EB04-D0FB-347E-06D91F4B013B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AF17EFC-EB04-D0FB-347E-06D91F4B013B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F77BE0DE-CA2C-4331-A0B6-67DB859F68D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F77BE0DE-CA2C-4331-A0B6-67DB859F68D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F77BE0DE-CA2C-4331-A0B6-67DB859F68D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F77BE0DE-CA2C-4331-A0B6-67DB859F68D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

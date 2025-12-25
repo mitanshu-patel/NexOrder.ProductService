@@ -3,6 +3,9 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NexOrder.ProductService.Application.Common;
+using NexOrder.ProductService.Application.Services;
+using NexOrder.ProductService.Domain.Entities;
+using NexOrder.ProductService.Messages.Events;
 using NexOrder.ProductService.Shared.Common;
 using System;
 using System.Collections.Generic;
@@ -16,11 +19,13 @@ namespace NexOrder.ProductService.Application.Products.UpdateProduct
     {
         private readonly IProductRepo productRepo;
         private readonly ILogger<UpdateProductHandler> logger;
+        private readonly IMessageDeliveryService messageDeliveryService;
 
-        public UpdateProductHandler(IProductRepo productRepo, ILogger<UpdateProductHandler> logger)
+        public UpdateProductHandler(IProductRepo productRepo, ILogger<UpdateProductHandler> logger, IMessageDeliveryService messageDeliveryService)
         {
             this.productRepo = productRepo;
             this.logger = logger;
+            this.messageDeliveryService = messageDeliveryService;
         }
         protected async override Task<CustomResponse<UpdateProductResult>> ExecuteCommandAsync(UpdateProductCommand command)
         {
@@ -40,6 +45,7 @@ namespace NexOrder.ProductService.Application.Products.UpdateProduct
                 productDetail.Description = command.Criteria.Description;
 
                 await this.productRepo.UpdateProductAsync(productDetail);
+                await this.messageDeliveryService.PublishMessageAsync(new ProductUpdated(productDetail.Id, productDetail.Name, productDetail.Description, productDetail.Price), ProductsTopic.TopicName);
 
                 this.logger.LogInformation("UpdateProductHandler: ExecuteCommandAsync execution completed and saved details");
 

@@ -8,8 +8,10 @@ using Microsoft.Extensions.Hosting;
 using NexOrder.ProductService.Application;
 using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Registrations;
+using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Repos;
+using NexOrder.ProductService.Infrastructure.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
@@ -22,6 +24,8 @@ builder.Services
     .ConfigureFunctionsApplicationInsights();
 builder.Services.RegisterHandlers();
 builder.Services.AddScoped<IMediator, Mediator>();
+builder.Services.AddSingleton<IMessageDeliveryService, MessageDeliveryService>();
+
 builder.Services.AddDbContext<ProductsContext>(
     v => v.UseSqlServer(configuration.GetConnectionString("SystemDbConnectionString"),
     b => b.MigrationsAssembly("NexOrder.ProductService.Infrastructure")));

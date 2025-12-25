@@ -1,0 +1,12 @@
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\bin\Debug\net8.0\NexOrder.ProductService.Messages.deps.json
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\bin\Debug\net8.0\NexOrder.ProductService.Messages.dll
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\bin\Debug\net8.0\NexOrder.ProductService.Messages.pdb
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.GeneratedMSBuildEditorConfig.editorconfig
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.AssemblyInfoInputs.cache
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.AssemblyInfo.cs
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.csproj.CoreCompileInputs.cache
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.sourcelink.json
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.dll
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\refint\NexOrder.ProductService.Messages.dll
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\NexOrder.ProductService.Messages.pdb
+C:\Mitanshu\Practice\Dotnet core\NexOrderApp\NexOrder.ProductService\NexOrder.ProductService.Messages\obj\Debug\net8.0\ref\NexOrder.ProductService.Messages.dll

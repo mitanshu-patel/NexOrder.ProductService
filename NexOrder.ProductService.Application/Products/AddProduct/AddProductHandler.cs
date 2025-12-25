@@ -3,7 +3,9 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NexOrder.ProductService.Application.Common;
+using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Domain.Entities;
+using NexOrder.ProductService.Messages.Events;
 using NexOrder.ProductService.Shared.Common;
 using System;
 using System.Collections.Generic;
@@ -17,11 +19,13 @@ namespace NexOrder.ProductService.Application.Products.AddProduct
     {
         private readonly IProductRepo productRepo;
         private readonly ILogger<AddProductHandler> logger;
+        private readonly IMessageDeliveryService messageDeliveryService;
 
-        public AddProductHandler(IProductRepo productRepo, ILogger<AddProductHandler> logger)
+        public AddProductHandler(IProductRepo productRepo, ILogger<AddProductHandler> logger, IMessageDeliveryService messageDeliveryService)
         {
             this.logger = logger;
             this.productRepo = productRepo;
+            this.messageDeliveryService = messageDeliveryService;
         }
 
         protected async override Task<CustomResponse<AddProductResult>> ExecuteCommandAsync(AddProductCommand command)
@@ -47,7 +51,7 @@ namespace NexOrder.ProductService.Application.Products.AddProduct
                 };
 
                 await this.productRepo.AddProductAsync(product);
-
+                await this.messageDeliveryService.PublishMessageAsync(new ProductUpdated(product.Id, product.Name, product.Description, product.Price), ProductsTopic.TopicName);
                 this.logger.LogInformation("AddProductHandler: ExecuteCommandAsync execution successfully with Id:{productId}", product.Id);
 
                 return CustomHttpResult.Ok(new AddProductResult(product.Id));
