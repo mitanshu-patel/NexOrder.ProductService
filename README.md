@@ -187,7 +187,7 @@ func start
 
 | Method | Endpoint | Description |
 |------|---------|-------------|
-| GET | /products | Get all products |
+| POST | /products/search | Search products |
 | GET | /products/{id} | Get product by ID |
 | POST | /products | Create new product |
 | PUT | /products/{id} | Update product |
