@@ -13,6 +13,15 @@ namespace NexOrder.ProductService.Infrastructure.Services
 {
     public class MessageDeliveryService : IMessageDeliveryService
     {
+        private string _connectionString;
+
+        private readonly IConfiguration configuration;
+
+        public MessageDeliveryService(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
         public async Task PublishMessageAsync<T>(T requestBody, string topicName)
         {
             var options = new ServiceBusClientOptions
@@ -23,8 +32,8 @@ namespace NexOrder.ProductService.Infrastructure.Services
 #if DEBUG
             options.WebProxy = new WebProxy(Environment.GetEnvironmentVariable("WebProxy"), true);
 #endif
-            var settingsSection = Environment.GetEnvironmentVariable("ConnectionStrings:ServiceBusConnectionString");
-            var client = new ServiceBusClient(settingsSection, options);
+            this._connectionString = this.configuration.GetConnectionString("ServiceBusConnectionString") ?? string.Empty;
+            var client = new ServiceBusClient(this._connectionString, options);
             var sender = client.CreateSender(topicName);
             var customBody = new
             {
