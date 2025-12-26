@@ -8,6 +8,7 @@ using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.DeleteProduct;
 using NexOrder.ProductService.Application.Products.GetProduct;
+using NexOrder.ProductService.Application.Products.ResyncProducts;
 using NexOrder.ProductService.Application.Products.SearchProducts;
 using NexOrder.ProductService.Application.Products.UpdateProduct;
 using NexOrder.ProductService.Shared.Common;
@@ -47,6 +48,17 @@ public class ProductFunctions
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         var command = new GetProductQuery(productId);
         var result = await this.mediator.SendAsync<GetProductQuery, CustomResponse<GetProductResult>>(command);
+        return result.GetResponse();
+    }
+
+    [Function("ResyncProducts")]
+    [OpenApiOperation(operationId: "ResyncProducts", tags: new[] { "ResyncProducts" }, Description = "Resync product details to other subscribing services")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ResyncProductsResult))]
+    public async Task<IActionResult> GetProduct([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/products/resync")] HttpRequest req)
+    {
+        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var command = new ResyncProductsCommand();
+        var result = await this.mediator.SendAsync<ResyncProductsCommand, CustomResponse<ResyncProductsResult>>(command);
         return result.GetResponse();
     }
 
