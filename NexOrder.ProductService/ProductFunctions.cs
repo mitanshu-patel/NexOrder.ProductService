@@ -54,7 +54,7 @@ public class ProductFunctions
     [Function("ResyncProducts")]
     [OpenApiOperation(operationId: "ResyncProducts", tags: new[] { "ResyncProducts" }, Description = "Resync product details to other subscribing services")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ResyncProductsResult))]
-    public async Task<IActionResult> GetProduct([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/products/resync")] HttpRequest req)
+    public async Task<IActionResult> ResyncProducts([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/products/resync")] HttpRequest req)
     {
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         var command = new ResyncProductsCommand();
