@@ -12,7 +12,7 @@ namespace NexOrder.ProductService.Shared.Common
         public HttpStatusCode ResponseCode { get; set; }
         public string ErrorMessage { get; set; }
 
-        public Dictionary<string, string>? Errors { get; set; }
+        public Dictionary<string, List<string>>? Errors { get; set; }
         public T Data { get; set; }
     }
 }

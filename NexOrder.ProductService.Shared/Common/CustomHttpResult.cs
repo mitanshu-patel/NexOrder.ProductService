@@ -40,7 +40,8 @@ namespace NexOrder.ProductService.Shared.Common
             return customResponse;
         }
 
-        public static CustomResponse<T> BadRequest<T>(string errorMessage, Dictionary<string, string>? errors = null)
+
+        public static CustomResponse<T> BadRequest<T>(string errorMessage, Dictionary<string, List<string>>? errors = null)
         {
             var customResponse = new CustomResponse<T>
             {
