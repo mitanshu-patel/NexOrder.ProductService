@@ -34,7 +34,7 @@ jobs:
           context: .
           push: true
           tags: practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}
-          file: ./Dockerfile
+          file: ./NexOder.ProductService/Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -60,4 +60,5 @@ jobs:
           app-name: 'NexOrder-ProductService'
           slot-name: 'Production'
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
+
           
