@@ -1,3 +1,4 @@
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
@@ -10,6 +11,7 @@ using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Registrations;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Infrastructure;
+using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
 using NexOrder.ProductService.Infrastructure.Services;
 
@@ -25,10 +27,18 @@ builder.Services
 builder.Services.RegisterHandlers();
 builder.Services.AddScoped<IMediator, Mediator>();
 builder.Services.AddSingleton<IMessageDeliveryService, MessageDeliveryService>();
-
+var connectionString = ConnectionStringsHelper.GetDbConnectionString();
 builder.Services.AddDbContext<ProductsContext>(
-    v => v.UseSqlServer(configuration.GetConnectionString("SystemDbConnectionString"),
+    v => v.UseSqlServer(connectionString,
     b => b.MigrationsAssembly("NexOrder.ProductService.Infrastructure")));
 builder.Services.AddScoped<IProductRepo, ProductRepo>();
+var app = builder.Build();
+if (builder.Configuration.GetValue<bool>("RunMigration"))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ProductsContext>();
+    db.Database.Migrate();
+    //return; // Exit after migration
+}
 
-builder.Build().Run();
+app.Run();

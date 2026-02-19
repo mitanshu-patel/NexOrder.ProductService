@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using NexOrder.ProductService.Infrastructure.Helpers;
 using System.IO;
 
 namespace NexOrder.ProductService.Infrastructure
@@ -10,14 +11,15 @@ namespace NexOrder.ProductService.Infrastructure
         public ProductsContext CreateDbContext(string[] args)
         {
             // Build configuration
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("local.settings.json", optional: true)
-                .AddEnvironmentVariables()
-                .Build();
+            //var configuration = new ConfigurationBuilder()
+            //    .SetBasePath(Directory.GetCurrentDirectory())
+            //    .AddJsonFile("local.settings.json", optional: true)
+            //    .AddEnvironmentVariables()
+            //    .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<ProductsContext>();
-            var connectionString = configuration.GetConnectionString("SystemDbConnectionString");
+            //var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:SystemDbConnectionString");
+            var connectionString = ConnectionStringsHelper.GetDbConnectionString();
 
             // Explicitly set the migrations assembly
             optionsBuilder.UseSqlServer(
