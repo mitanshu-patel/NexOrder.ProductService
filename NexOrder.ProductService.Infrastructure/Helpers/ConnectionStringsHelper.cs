@@ -10,17 +10,21 @@ namespace NexOrder.ProductService.Infrastructure.Helpers
     {
         public static string GetDbConnectionString()
         {
+            // Azure App Service sets connection strings as SQLCONNSTR_<name>
+            var azureConnStr = Environment.GetEnvironmentVariable("SQLCONNSTR_SystemDbConnectionString");
+            if (!string.IsNullOrEmpty(azureConnStr))
+                return azureConnStr;
+
             var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:SystemDbConnectionString");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                var serverName = Environment.GetEnvironmentVariable("DB_SERVER_NAME") ?? "localhost";
-                var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "productsdb";
-                var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "sa";
-                var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "admin123";
-                var defaultConnectionString = $"Server={serverName};Database={dbName};User Id={dbUser};Password={dbPassword};Encrypt=False;TrustServerCertificate=True";
-                return defaultConnectionString;
-            }
-            return connectionString;
+            if (!string.IsNullOrEmpty(connectionString))
+                return connectionString;
+
+            var serverName = Environment.GetEnvironmentVariable("DB_SERVER_NAME") ?? "localhost";
+            var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "productsdb";
+            var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "sa";
+            var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "admin123";
+            var defaultConnectionString = $"Server={serverName};Database={dbName};User Id={dbUser};Password={dbPassword};Encrypt=False;TrustServerCertificate=True";
+            return defaultConnectionString;
         }
     }
 }
