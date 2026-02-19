@@ -1,7 +1,7 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy dotnet core project to Azure Function App - NexOrder-ProductService
+name: Build and deploy container app to Azure Web App - NexOrder-ProductService
 
 on:
   push:
@@ -9,60 +9,57 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
-
 jobs:
-  build-and-deploy:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to container registry
+        uses: docker/login-action@v2
+        with:
+          registry: practiceregistry.azurecr.io/
+          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}
+          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_39A2E5B57DF245A0A8E15F296F5BB2D1 }}
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}
+          file: NexOrder.ProductService/Dockerfile
+
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
 
+    needs: build
+    
     steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
-
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      - name: Clear NuGet cache
-        run: dotnet nuget locals all --clear
-
-      - name: Install EF Core CLI
-        run: dotnet tool install --global dotnet-ef --version 8.0.22
-
-      - name: Apply EF Core migrations
-        run: |
-          dotnet ef database update \
-            --project NexOrder.ProductService.Infrastructure \
-            --startup-project NexOrder.ProductService.Infrastructure \
-            --context ProductsContext
-        env:
-          ConnectionStrings__SystemDbConnectionString: ${{ secrets.SQL_CONN }}
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5B96FC5A0DCB41A9AB18206298F7BB62 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9CF07E90978946799A4DA853C21C8B03 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_35ED48A027AC4B138EFDE3C10843A88D }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0DBB8C878FB24A6A85FF81E5728F10F4 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ACBEA1A314EC4A5F96A1B487B3C9B5B9 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4C0CA2FE46C54F599541AADF6C4DE73D }}
 
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        id: fa
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
         with:
           app-name: 'NexOrder-ProductService'
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+          images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+

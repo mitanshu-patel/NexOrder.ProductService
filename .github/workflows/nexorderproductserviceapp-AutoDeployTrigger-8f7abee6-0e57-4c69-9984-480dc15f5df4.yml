@@ -35,15 +35,10 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
+          dockerfilePath: NexOrder.ProductService/Dockerfile
           registryUrl: practiceregistry.azurecr.io
           registryUsername: ${{ secrets.NEXORDERPRODUCTSERVICEAPP_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.NEXORDERPRODUCTSERVICEAPP_REGISTRY_PASSWORD }}
           containerAppName: nexorderproductserviceapp
           resourceGroup: PracticeGroup
           imageToBuild: practiceregistry.azurecr.io/nexorderproductserviceapp:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
-
-
