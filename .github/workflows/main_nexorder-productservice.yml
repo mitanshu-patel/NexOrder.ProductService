@@ -59,6 +59,10 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore NuGet Packages
+        run: dotnet restore
+        working-directory: NexOrder.ProductService
+
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
 
@@ -77,6 +81,7 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
 
 
