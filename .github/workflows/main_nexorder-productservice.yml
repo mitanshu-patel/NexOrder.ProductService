@@ -67,7 +67,7 @@ jobs:
         run: dotnet tool install --global dotnet-ef
 
       - name: Update Database
-        working-directory: NexOrder.ProductService
+        working-directory: NexOrder.ProductService.Infrastructure
         run: dotnet ef database update
         env:
           ConnectionStrings__SystemDbConnectionString: ${{ secrets.SQL_CONN }}
@@ -81,6 +81,7 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
 
 
