@@ -39,9 +39,9 @@ jobs:
       - name: Run EF Core Migration
         run: |
           docker run --rm \
-            -e SQLCONNSTR_SystemDbConnectionString="${{ secrets.SQL_CONN }}" \
+            -e ConnectionStrings__DefaultConnection="${{ secrets.PROD_DB_CONNECTION }}" \
             practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }} \
-            --RunMigration=true
+            dotnet NexOrder.ProductService.dll --RunMigration
 
   deploy:
     runs-on: ubuntu-latest
