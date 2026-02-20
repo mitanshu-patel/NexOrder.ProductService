@@ -36,6 +36,13 @@ jobs:
           tags: practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}
           file: NexOrder.ProductService/Dockerfile
 
+      - name: Run EF Core Migration
+        run: |
+          docker run --rm \
+            -e SQLCONNSTR_SystemDbConnectionString="${{ secrets.SQL_CONN }}" \
+            practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }} \
+            dotnet NexOrder.ProductService.dll --migrate
+
   deploy:
     runs-on: ubuntu-latest
     permissions:
@@ -62,4 +69,5 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
