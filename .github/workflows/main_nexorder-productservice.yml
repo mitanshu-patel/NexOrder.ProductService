@@ -61,10 +61,8 @@ jobs:
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
 
-      - name: Show folder structure
-        run: |
-          pwd
-          ls -R
+      - name: List root files
+        run: ls
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -75,6 +73,7 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
 
 
