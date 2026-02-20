@@ -58,7 +58,6 @@ jobs:
         run: |
          echo "Public IP is:"
          curl -s https://api.ipify.org
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -70,7 +69,16 @@ jobs:
 
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
-    
+
+      - name: Apply EF Core migrations
+        run: |
+          dotnet ef database update \
+            --project NexOrder.ProductService.Infrastructure \
+            --startup-project NexOrder.ProductService.Infrastructure \
+            --context ProductsContext
+        env:
+          ConnectionStrings__SystemDbConnectionString: ${{ secrets.SQL_CONN }}
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
@@ -78,22 +86,3 @@ jobs:
           app-name: 'NexOrder-ProductService'
           slot-name: 'Production'
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
