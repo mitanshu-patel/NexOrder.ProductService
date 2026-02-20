@@ -54,6 +54,19 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ACBEA1A314EC4A5F96A1B487B3C9B5B9 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4C0CA2FE46C54F599541AADF6C4DE73D }}
 
+      - name: Get Public IP
+        id: ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+      
+      - name: Add Firewall Rule
+        run: |
+          az sql server firewall-rule create \
+            --resource-group PracticeGroup \
+            --server nexorder \
+            --name github-runner \
+            --start-ip-address ${{ steps.ip.outputs.ip }} \
+            --end-ip-address ${{ steps.ip.outputs.ip }}
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -83,7 +96,15 @@ jobs:
           slot-name: 'Production'
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
+      - name: Remove Firewall Rule
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group PracticeGroup \
+            --server nexorder \
+            --name github-runner
+
           
+
 
 
 
