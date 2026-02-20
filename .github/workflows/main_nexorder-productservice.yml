@@ -64,9 +64,8 @@ jobs:
       - name: Update Database
         run: |
            dotnet ef database update \
-            --project NexOrder.ProductService/NexOrder.ProductService.Infrastructure.csproj \
-            --startup-project NexOrder.ProductService/NexOrder.ProductService.Infrastructure.csproj \
-            --context ProductsContext
+            --project NexOrder.ProductService/NexOrder.ProductService.ProductService.csproj \
+            --startup-project NexOrder.ProductService/NexOrder.ProductService.ProductService.csproj
         env:
           ConnectionStrings__SystemDbConnectionString: ${{ secrets.SQL_CONN }}
 
@@ -79,6 +78,7 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
 
 
