@@ -45,6 +45,7 @@ jobs:
     needs: build
     
     steps:
+      - uses: actions/checkout@v4
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -73,6 +74,7 @@ jobs:
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
 
           
+
 
 
 
