@@ -1,0 +1,4 @@
+services:
+  nexorder.productservice:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development

@@ -2,8 +2,14 @@
   "profiles": {
     "NexOrder.ProductService": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7032",
-      "launchBrowser": false
+      "commandLineArgs": "--port 7032"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "containerRunArguments": "--init",
+      "httpPort": 31280,
+      "useSSL": false
     }
   }
 }

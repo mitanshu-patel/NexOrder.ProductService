@@ -1,0 +1,39 @@
+networks:
+  nexorder-network:
+services:
+  nexordersproductssql:
+    container_name: nexordersproductssql
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=AdminPassword@123
+    ports:
+      - 1433:1433
+    volumes:
+      - nexordersproductssql_data:/var/opt/mssql
+    networks:
+      - nexorder-network
+
+  nexorder.productservice:
+    container_name: nexorderproductservice
+    # image: mitanshu5/mitanshu-patel:nexorderproductservice-1.0
+    image: nexorderproductservice:1.1
+    build:
+      context: .
+      dockerfile: NexOrder.ProductService/Dockerfile
+    ports:
+      - 7023:80
+    environment:
+      - DB_SERVER_NAME=nexordersproductssql
+      - DB_NAME=nexorder-products
+      - DB_PASSWORD=AdminPassword@123
+      - ConnectionStrings:ServiceBusConnectionString=Endpoint=sb://localservicbusnamespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=CIGusUdExObMe4KFA1prHxw7Y21a8jnbl+ASbH1grZo=
+      - RunMigration=true
+    depends_on:
+      - nexordersproductssql
+    networks:
+      - nexorder-network
+
+volumes:
+  nexordersproductssql_data:
+    driver: local
