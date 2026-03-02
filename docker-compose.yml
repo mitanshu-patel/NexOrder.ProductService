@@ -4,11 +4,10 @@ services:
   nexordersproductssql:
     container_name: nexordersproductssql
     image: mcr.microsoft.com/mssql/server:2019-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=db_password
+    env_file:
+      - local.env
     ports:
-      - 1433:1433
+      - 1434:1433
     volumes:
       - nexordersproductssql_data:/var/opt/mssql
     networks:
@@ -23,12 +22,16 @@ services:
       dockerfile: NexOrder.ProductService/Dockerfile
     ports:
       - 7023:80
-    environment:
-      - DB_SERVER_NAME=db_server
-      - DB_NAME=db_name
-      - DB_PASSWORD=db_password
-      - ConnectionStrings:connection_string
-      - RunMigration=true
+    env_file:
+      - local.env
+      # Following config will be needed in local.env file:-
+        # DB_SERVER_NAME=nexordersproductssql
+        # ACCEPT_EULA=Y
+        # SA_PASSWORD=db_password
+        # DB_NAME=db_name
+        # DB_PASSWORD=db_password!
+        # ServiceBusConnectionString=connectionstring_for_servicebus
+        # RunMigration=true
     depends_on:
       - nexordersproductssql
     networks:
