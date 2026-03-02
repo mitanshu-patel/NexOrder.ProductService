@@ -36,6 +36,32 @@ jobs:
           tags: practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}
           file: NexOrder.ProductService/Dockerfile
 
+  migrate:
+   runs-on: ubuntu-latest
+   needs: build
+   steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install dotnet-ef (global)
+      run: |
+        dotnet tool install --global dotnet-ef --version 8.0.*
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+    - name: Run EF Core migrations
+      env:
+        DB_CONNECTION: ${{ secrets.SQL_CONN }}
+      run: |
+        dotnet ef database update \
+          --project NexOrder.ProductService.Infrastructure \
+          --startup-project NexOrder.ProductService.Infrastructure \
+          --connection "$DB_CONNECTION"
+
   deploy:
     runs-on: ubuntu-latest
     permissions:
@@ -54,31 +80,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ACBEA1A314EC4A5F96A1B487B3C9B5B9 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4C0CA2FE46C54F599541AADF6C4DE73D }}
 
-      - name: Show GitHub Runner Public IP
-        run: |
-         echo "Public IP is:"
-         curl -s https://api.ipify.org
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Restore NuGet Packages
-        run: dotnet restore
-        working-directory: NexOrder.ProductService
-
-      - name: Install dotnet-ef
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Apply EF Core migrations
-        run: |
-          dotnet ef database update \
-            --project NexOrder.ProductService.Infrastructure \
-            --startup-project NexOrder.ProductService.Infrastructure \
-            --context ProductsContext
-        env:
-          ConnectionStrings__SystemDbConnectionString: ${{ secrets.SQL_CONN }}
-
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
@@ -86,3 +87,4 @@ jobs:
           app-name: 'NexOrder-ProductService'
           slot-name: 'Production'
           images: 'practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}'
+
