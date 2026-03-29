@@ -50,6 +50,55 @@ NexOrder.ProductService
 - Secured behind Azure API Management
 - Event publication for downstream services
 - Runs locally via **Azure Functions Core Tools** or **Docker**
+- Redis-based caching for optimized performance
+
+---
+
+## 🧠 Caching Strategy (Redis)
+
+To improve performance and reduce database load, Redis caching is
+implemented for the **Product List API**.
+
+### ✅ What is cached?
+
+-   Paginated product list responses
+-   Filtered results
+
+### 🔑 Cache Key Structure
+
+products:v{version}:page={pageNumber}:size={pageSize}
+
+-   Includes pagination parameters
+-   Uses versioning to handle invalidation
+
+------------------------------------------------------------------------
+
+### 🔄 Cache Invalidation Strategy
+
+Instead of deleting cache keys manually:
+
+-   A **version-based approach** is used
+-   A global key is maintained:
+
+products:version
+
+-   On any **Add / Update / Delete**:
+    -   Version is incremented
+    -   Old cache becomes obsolete automatically
+
+------------------------------------------------------------------------
+
+### ⏱ Cache Expiry
+
+-   TTL (Time-To-Live) is applied to avoid stale data
+-   Ensures eventual consistency
+
+------------------------------------------------------------------------
+
+### ⚙️ Technology Used
+
+-   IDistributedCache abstraction
+-   Redis via StackExchange.Redis
 
 ---
 
@@ -62,6 +111,7 @@ NexOrder.ProductService
 - **Azure SQL**
 - **Azure API Management**
 - **Azure Service Bus**
+- **Azure Managed Redis**
 - **Docker / Docker Compose**
 - **GitHub Actions**
 
@@ -181,6 +231,8 @@ Run the container (example):
 docker run --rm -p 8080:80 \
   -e ConnectionStrings__SystemDbConnectionString="<connection-string>" \
   -e ConnectionStrings__ServiceBusConnectionString="<servicebus-connection-string>" \
+  -e RedisCacheOptions_Configuration="<redis-connection-string>" \
+  -e RedisCacheOptions_InstanceName="<redis-instance-name>" \
   nexorder-productservice:local
 ```
 
@@ -211,6 +263,8 @@ Common keys:
 
 - `ConnectionStrings__SystemDbConnectionString`
 - `ConnectionStrings__ServiceBusConnectionString`
+- `RedisCacheOptions_Configuration`
+- `RedisCacheOptions_InstanceName`
 
 ---
 
