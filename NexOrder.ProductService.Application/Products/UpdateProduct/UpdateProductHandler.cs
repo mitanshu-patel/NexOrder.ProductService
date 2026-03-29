@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Domain.Entities;
+using NexOrder.ProductService.Messages.Commands;
 using NexOrder.ProductService.Messages.Events;
 using NexOrder.ProductService.Shared.Common;
 using System;
@@ -20,7 +21,6 @@ namespace NexOrder.ProductService.Application.Products.UpdateProduct
         private readonly IProductRepo productRepo;
         private readonly ILogger<UpdateProductHandler> logger;
         private readonly IMessageDeliveryService messageDeliveryService;
-
         public UpdateProductHandler(IProductRepo productRepo, ILogger<UpdateProductHandler> logger, IMessageDeliveryService messageDeliveryService)
         {
             this.productRepo = productRepo;
@@ -40,12 +40,20 @@ namespace NexOrder.ProductService.Application.Products.UpdateProduct
                     return CustomHttpResult.NotFound<UpdateProductResult>("Product not found");
                 }
 
+                var cacheRefreshNeeded = !productDetail.Name.Equals(command.Criteria.Name)
+                    || productDetail.Price != command.Criteria.Price
+                    || !productDetail.Description.Equals(command.Criteria.Description);
+
                 productDetail.Name = command.Criteria.Name;
                 productDetail.Price = command.Criteria.Price;
                 productDetail.Description = command.Criteria.Description;
 
                 await this.productRepo.UpdateProductAsync(productDetail);
                 await this.messageDeliveryService.PublishMessageAsync(new ProductUpdated(productDetail.Id, productDetail.Name, productDetail.Description, productDetail.Price), ProductsTopic.TopicName);
+                if(cacheRefreshNeeded)
+                {
+                    await this.messageDeliveryService.PublishMessageAsync(new UpdateProductsCache(), ProductServiceCommand.QueueName);
+                }
 
                 this.logger.LogInformation("UpdateProductHandler: ExecuteCommandAsync execution completed and saved details");
 

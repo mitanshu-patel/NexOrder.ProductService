@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NexOrder.ProductService;
 using NexOrder.ProductService.Application;
 using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Registrations;
@@ -17,7 +18,9 @@ using NexOrder.ProductService.Infrastructure.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
-                    .AddEnvironmentVariables().Build();
+                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                    .AddEnvironmentVariables()
+                    .Build();
 
 builder.ConfigureFunctionsWebApplication();
 
@@ -32,6 +35,9 @@ builder.Services.AddDbContext<ProductsContext>(
     v => v.UseSqlServer(connectionString,
     b => b.MigrationsAssembly("NexOrder.ProductService.Infrastructure")));
 builder.Services.AddScoped<IProductRepo, ProductRepo>();
+builder.Services.AddRedisCache(
+    configuration["RedisCacheOptions_Configuration"],
+    configuration["RedisCacheOptions_InstanceName"]);
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("RunMigration"))
 {

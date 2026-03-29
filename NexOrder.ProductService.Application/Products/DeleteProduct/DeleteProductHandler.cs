@@ -3,6 +3,8 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NexOrder.ProductService.Application.Common;
+using NexOrder.ProductService.Application.Services;
+using NexOrder.ProductService.Messages.Commands;
 using NexOrder.ProductService.Shared.Common;
 using System;
 using System.Collections.Generic;
@@ -16,11 +18,13 @@ namespace NexOrder.ProductService.Application.Products.DeleteProduct
     {
         private readonly IProductRepo productRepo;
         private readonly ILogger<DeleteProductHandler> logger;
+        private readonly IMessageDeliveryService messageDeliveryService;
 
-        public DeleteProductHandler(IProductRepo productRepo, ILogger<DeleteProductHandler> logger)
+        public DeleteProductHandler(IProductRepo productRepo, ILogger<DeleteProductHandler> logger, IMessageDeliveryService messageDeliveryService)
         {
             this.logger = logger;
             this.productRepo = productRepo;
+            this.messageDeliveryService = messageDeliveryService;
         }
 
         protected async override Task<CustomResponse<DeleteProductResult>> ExecuteCommandAsync(DeleteProductCommand command)
@@ -39,6 +43,7 @@ namespace NexOrder.ProductService.Application.Products.DeleteProduct
                 productDetail.IsDeleted = true;
 
                 await this.productRepo.UpdateProductAsync(productDetail);
+                await this.messageDeliveryService.PublishMessageAsync(new UpdateProductsCache(), ProductServiceCommand.QueueName);
 
                 this.logger.LogInformation("DeleteProductHandler: ExecuteCommandAsync execution completed and deleted product");
 

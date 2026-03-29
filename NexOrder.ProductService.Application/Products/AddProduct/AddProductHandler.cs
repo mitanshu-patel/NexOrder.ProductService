@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Domain.Entities;
+using NexOrder.ProductService.Messages.Commands;
 using NexOrder.ProductService.Messages.Events;
 using NexOrder.ProductService.Shared.Common;
 using System;
@@ -52,6 +53,7 @@ namespace NexOrder.ProductService.Application.Products.AddProduct
 
                 await this.productRepo.AddProductAsync(product);
                 await this.messageDeliveryService.PublishMessageAsync(new ProductUpdated(product.Id, product.Name, product.Description, product.Price), ProductsTopic.TopicName);
+                await this.messageDeliveryService.PublishMessageAsync(new UpdateProductsCache(), ProductServiceCommand.QueueName);
                 this.logger.LogInformation("AddProductHandler: ExecuteCommandAsync execution successfully with Id:{productId}", product.Id);
 
                 return CustomHttpResult.Ok(new AddProductResult(product.Id));
