@@ -13,6 +13,14 @@ services:
     networks:
       - nexorder-network
 
+  nexorderredis:
+    container_name: nexorderredis
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+    networks:
+      - nexorder-network
+
   nexorder.productservice:
     container_name: nexorderproductservice
     # image: mitanshu5/mitanshu-patel:nexorderproductservice-1.0
@@ -34,6 +42,7 @@ services:
         # RunMigration=true
     depends_on:
       - nexordersproductssql
+      - nexorderredis
     networks:
       - nexorder-network
 
