@@ -5,61 +5,48 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace NexOrder.ProductService.Infrastructure.Services
 {
     public class CacheService : ICacheService
     {
-        private readonly IDistributedCache distributedCache;
-        public CacheService(IDistributedCache distributedCache)
+        private readonly IFusionCache distributedCache;
+        public CacheService(IFusionCache distributedCache)
         {
             this.distributedCache = distributedCache;
         }
 
-        public string GetValue(string cacheKey)
+        public T? GetValue<T>(string cacheKey)
         {
-            return this.distributedCache.GetString(cacheKey) ?? string.Empty;
+            return this.distributedCache.GetOrDefault<T>(cacheKey);
         }
 
-        public async Task<string> GetValueAsync(string cacheKey)
+        public async Task<T?> GetValueAsync<T>(string cacheKey)
         {
-            return await this.distributedCache.GetStringAsync(cacheKey) ?? string.Empty;
+            return await this.distributedCache.GetOrDefaultAsync<T>(cacheKey);
         }
 
         public async Task RefreshCacheAsync(string cacheKey)
         {
             // Here we're updating cache version so that old version isn't used anymore.
-            var cacheVersion = await this.distributedCache.GetStringAsync(cacheKey);
+            var cacheVersion = await this.distributedCache.GetOrDefaultAsync<string>(cacheKey);
             if (!string.IsNullOrEmpty(cacheVersion))
             {
                 int version = Convert.ToInt32(cacheVersion);
                 version += 1;
-                this.distributedCache.SetString(cacheKey, version.ToString());
+                this.distributedCache.Set(cacheKey, version.ToString());
             }
         }
 
-        public void SetValue(string cacheKey, string cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
+        public void SetValue<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
         {
-            if(cacheOptions != null)
-            {
-                this.distributedCache.SetString(cacheKey, cacheValue, cacheOptions);
-            }
-            else
-            {
-                this.distributedCache.SetString(cacheKey, cacheValue);
-            }
+            this.distributedCache.Set(cacheKey, cacheValue);
         }
 
-        public async Task SetValueAsync(string cacheKey, string cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
+        public async Task SetValueAsync<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
         {
-            if (cacheOptions != null)
-            {
-                await this.distributedCache.SetStringAsync(cacheKey, cacheValue, cacheOptions);
-            }
-            else
-            {
-                await this.distributedCache.SetStringAsync(cacheKey, cacheValue);
-            }
+            await this.distributedCache.SetAsync(cacheKey, cacheValue);
         }
     }
 }

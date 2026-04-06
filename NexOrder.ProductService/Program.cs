@@ -1,8 +1,10 @@
+using System.Text.Json;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +17,8 @@ using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
 using NexOrder.ProductService.Infrastructure.Services;
+using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
@@ -38,6 +42,14 @@ builder.Services.AddScoped<IProductRepo, ProductRepo>();
 builder.Services.AddRedisCache(
     configuration["RedisCacheOptions_Configuration"],
     configuration["RedisCacheOptions_InstanceName"]);
+builder.Services.AddFusionCache()
+    .WithDefaultEntryOptions(options => {
+        options.Duration = TimeSpan.FromMinutes(5);
+        // This is your Stampede Protection!
+        options.LockTimeout = TimeSpan.FromSeconds(10); 
+    })
+    .WithSerializer(new FusionCacheSystemTextJsonSerializer())
+    .WithDistributedCache(builder.Services.BuildServiceProvider().GetRequiredService<IDistributedCache>());
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("RunMigration"))
 {

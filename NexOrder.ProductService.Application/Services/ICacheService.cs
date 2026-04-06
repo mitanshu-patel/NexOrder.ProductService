@@ -9,13 +9,13 @@ namespace NexOrder.ProductService.Application.Services
 {
     public interface ICacheService
     {
-        public Task<string> GetValueAsync(string cacheKey);
+        public Task<T?> GetValueAsync<T>(string cacheKey);
 
-        public string GetValue(string cacheKey);
+        public T? GetValue<T>(string cacheKey);
 
-        public void SetValue(string cacheKey, string cacheValue, DistributedCacheEntryOptions? options = null);
+        public void SetValue<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? options = null);
 
-        public Task SetValueAsync(string cacheKey, string cacheValue, DistributedCacheEntryOptions? options = null);
+        public Task SetValueAsync<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? options = null);
 
         public Task RefreshCacheAsync(string cacheKey);
     }

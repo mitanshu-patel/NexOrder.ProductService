@@ -48,66 +48,47 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
                 var cachedListValue = string.Empty; 
                 var totalRecords = 0;
                 List<SearchProductsDto> productsList = [];
-                //var cacheResponse = await this.GetCachedResponse(command, isCacheable, products);
-                //if (cacheResponse != null)
-                //{
-                //    return cacheResponse;
-                //}
+                var cacheResponse = await this.GetCachedResponse(command, isCacheable, products);
+                if (cacheResponse != null)
+                {
+                    this.logger.LogInformation("SearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products from CACHE", totalRecords);
+                    return cacheResponse;
+                }
 
-                //await this.cacheLock.WaitAsync(5000);
-                //try
-                //{
-                    var cacheResponse = await this.GetCachedResponse(command, isCacheable, products);
-                    if (cacheResponse != null)
-                    {
-                        return cacheResponse;
-                    }
+                cacheKey = CacheKey.ProductListCache(cacheVersion, command.PageIndex, command.PageSize, command.SearchText);
 
-                    cacheKey = CacheKey.ProductListCache(cacheVersion, command.PageIndex, command.PageSize, command.SearchText);
+                if (!string.IsNullOrEmpty(command.SearchText))
+                {
+                    products = products.Where(v => v.Name.Contains(command.SearchText) || v.Description.Contains(command.SearchText));
+                }
 
-                    if (!string.IsNullOrEmpty(command.SearchText))
-                    {
-                        products = products.Where(v => v.Name.Contains(command.SearchText) || v.Description.Contains(command.SearchText));
-                    }
+                totalRecords = await products.CountAsync();
+                productsList = await products
+                                .OrderByDescending(v => v.CreatedAtUtc)
+                                .Select(v => new SearchProductsDto
+                                {
+                                    Price = v.Price,
+                                    Name = v.Name,
+                                    Id = v.Id
+                                })
+                                .Skip(command.PageIndex * command.PageSize)
+                                .Take(command.PageSize)
+                                .ToListAsync();
 
-                    totalRecords = await products.CountAsync();
-                    productsList = await products
-                                    .OrderByDescending(v => v.CreatedAtUtc)
-                                    .Select(v => new SearchProductsDto
-                                    {
-                                        Price = v.Price,
-                                        Name = v.Name,
-                                        Id = v.Id
-                                    })
-                                    .Skip(command.PageIndex * command.PageSize)
-                                    .Take(command.PageSize)
-                                    .ToListAsync();
+                if (isCacheable)
+                {
+                    await this.cacheService.SetValueAsync(cacheKey, productsList);
+                }
 
-                    if (isCacheable)
-                    {
-                        var cacheOptions = new DistributedCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(5),
-                        };
+                this.logger.LogInformation("SearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", totalRecords);
 
-                        this.cacheService.SetValue(cacheKey, JsonSerializer.Serialize(productsList), cacheOptions);
-                    }
-
-                    this.logger.LogInformation("SearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", totalRecords);
-
-                    return CustomHttpResult.Ok(new SearchProductsResult(productsList, totalRecords));
-                //}
-                //finally
-                //{
-                //    this.cacheLock.Release();
-                //}
+                return CustomHttpResult.Ok(new SearchProductsResult(productsList, totalRecords));
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, "SearchProductsHandler: exception occurred with message:{message}", ex.Message);
                 throw;
             }
-            
         }
 
         protected override CustomResponse<SearchProductsResult> GetValidationFailedResult(ValidationResult validationResult)
@@ -131,7 +112,7 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
 
                 // We use a cache version to invalidate all the cached data when there is a change in products data. Whenever there is a change in products data, we will update the cache version which will make all the existing cache data stale and it will be removed from cache when it expires after sliding expiration time.
                 // This way we don't need to remove each cache entry individually when there is a change in products data.
-                var cacheVersion = await this.cacheService.GetValueAsync(CacheKey.ProductListCacheVersion);
+                var cacheVersion = await this.cacheService.GetValueAsync<string>(CacheKey.ProductListCacheVersion);
                 if (string.IsNullOrEmpty(cacheVersion))
                 {
                     cacheVersion = "1";
@@ -139,10 +120,10 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
                 }
 
                 var cacheKey = CacheKey.ProductListCache(cacheVersion, command.PageIndex, command.PageSize);
-                var cachedListValue = await this.cacheService.GetValueAsync(cacheKey);
-                if (!string.IsNullOrEmpty(cachedListValue))
+                var cachedListValue = await this.cacheService.GetValueAsync<List<SearchProductsDto>>(cacheKey);
+                if (cachedListValue != null)
                 {
-                    var productsList = JsonSerializer.Deserialize<List<SearchProductsDto>>(cachedListValue) ?? [];
+                    var productsList = cachedListValue;
                     this.logger.LogInformation("SearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products from cache", totalRecords);
                     return CustomHttpResult.Ok(new SearchProductsResult(productsList, totalRecords));
                 }
