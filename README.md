@@ -85,19 +85,37 @@ products:version
 -   On any **Add / Update / Delete**:
     -   Version is incremented
     -   Old cache becomes obsolete automatically
+    -   
+To ensure high performance and data consistency, NexOrder uses a **Versioned Redis Cache** strategy:
+
+* **Caching:** Product data is cached using a versioned key pattern.
+* **Invalidation (Event-Driven):** We use **Azure Service Bus** to maintain consistency across instances.
+* **Workflow:**
+    * 1. An `Add/Update/Delete` operation occurs.
+    * 2. A command (`UpdateProductsCache`) is published to the `productservicecommands` queue.
+    * 3. The `ProductService` consumes its own command and increments the **Cache Version**.
+    * 4. Subsequent reads fetch the new version, effectively invalidating the old cache.
 
 ------------------------------------------------------------------------
+### 🛡️ Resilience & Performance
+To handle high-load scenarios, **NexOrder** implements advanced caching patterns:
 
+#### Cache Stampede Protection (FusionCache)
+When a popular cache key expires, multiple concurrent requests often try to re-generate the same data simultaneously, hitting the database all at once. 
+- **Solution:** We use **FusionCache's** built-in "Fail-Safe" and "Soft-Expiration" mechanisms.
+- **Implementation:** By utilizing **Probabilistic Propagation** and **Optimistic Locking**, FusionCache ensures that only one factory execution happens at a time for a specific key, while other concurrent requests wait for the result or receive a slightly stale (fail-safe) value.
+
+------------------------------------------------------------------------
 ### ⏱ Cache Expiry
 
--   TTL (Time-To-Live) is applied to avoid stale data
+-   TTL (Time-To-Live) for now 5 minutes is applied to avoid stale data
 -   Ensures eventual consistency
 
 ------------------------------------------------------------------------
 
 ### ⚙️ Technology Used
 
--   IDistributedCache abstraction
+-   IFusionCache abstraction
 -   Redis via StackExchange.Redis
 
 ---
