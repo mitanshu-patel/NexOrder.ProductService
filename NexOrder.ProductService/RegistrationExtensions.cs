@@ -1,0 +1,75 @@
+﻿using Azure.Monitor.OpenTelemetry.Exporter;
+using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Azure.Functions.Worker.OpenTelemetry;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NexOrder.ProductService.Application.Services;
+using NexOrder.ProductService.Infrastructure.Services;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
+
+namespace NexOrder.ProductService
+{
+    public static class RegistrationExtensions
+    {
+        public static void AddRedisCache(this FunctionsApplicationBuilder builder, string? configuration, string? instanceName)
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                // Read Redis settings from local settings (or environment) loaded above
+                options.Configuration = configuration;
+                options.InstanceName = instanceName;
+            });
+            builder.Services.AddScoped<ICacheService, CacheService>();
+
+            builder.Services.AddFusionCache()
+            .WithDefaultEntryOptions(options => {
+                options.Duration = TimeSpan.FromMinutes(5);
+                options.LockTimeout = TimeSpan.FromSeconds(10); // This is duration upto which lock will be held.
+            })
+            .WithSerializer(new FusionCacheSystemTextJsonSerializer())
+            .WithDistributedCache(builder.Services.BuildServiceProvider().GetRequiredService<IDistributedCache>());
+        }
+
+        public static void AddNexOrderCustomLogging(this IServiceCollection services, bool isDevelopment, string? loggingConnection)
+        {
+            services
+            .AddOpenTelemetry()
+            .ConfigureResource(v => v.AddService("NexOrder.ProductService"))
+            .UseFunctionsWorkerDefaults()
+            .WithTracing(builder => {
+                builder
+                    .AddHttpClientInstrumentation()
+                    .AddAspNetCoreInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddAzureMonitorTraceExporter(o => {
+                        o.ConnectionString = loggingConnection;
+                    });
+            });
+
+            services.AddLogging(v =>
+            {
+                if (isDevelopment)
+                {
+                    v.AddConsole();
+                }
+                v.AddOpenTelemetry(options =>
+                {
+                    options.AddAzureMonitorLogExporter(o => o.ConnectionString = loggingConnection);
+
+                    options.IncludeFormattedMessage = true;
+                    options.IncludeScopes = true;
+                });
+            });
+        }
+    }
+}

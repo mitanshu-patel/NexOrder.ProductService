@@ -33,34 +33,7 @@ builder.ConfigureFunctionsWebApplication();
 
 var appInsightsConnection = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-builder.Services
-    .AddOpenTelemetry()
-    .ConfigureResource(v=>v.AddService("NexOrder.ProductService"))
-    .UseFunctionsWorkerDefaults()
-    .WithTracing(builder => {
-    builder
-        .AddHttpClientInstrumentation()
-        .AddAspNetCoreInstrumentation()
-        .AddEntityFrameworkCoreInstrumentation()
-        .AddAzureMonitorTraceExporter(o => {
-            o.ConnectionString = appInsightsConnection;
-        });
-});
-
-builder.Services.AddLogging(v =>
-{
-    if (isDevelopment)
-    {
-        v.AddConsole();
-    }
-    v.AddOpenTelemetry(options =>
-    {
-        options.AddAzureMonitorLogExporter(o => o.ConnectionString = appInsightsConnection);
-
-        options.IncludeFormattedMessage = true;
-        options.IncludeScopes = true;
-    });
-});
+builder.Services.AddNexOrderCustomLogging(isDevelopment, appInsightsConnection);
 
 builder.Services.RegisterHandlers();
 builder.Services.AddScoped<IMediator, Mediator>();
