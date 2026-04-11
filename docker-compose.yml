@@ -38,7 +38,7 @@ services:
         # SA_PASSWORD=db_password
         # DB_NAME=db_name
         # DB_PASSWORD=db_password!
-        # ServiceBusConnectionString=connectionstring_for_servicebus
+        # ConnectionStrings__ServiceBusConnectionString=connectionstring_for_servicebus
         # RunMigration=true
     depends_on:
       - nexordersproductssql
