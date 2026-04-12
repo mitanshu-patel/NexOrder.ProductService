@@ -28,14 +28,6 @@ jobs:
           username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}
           password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_39A2E5B57DF245A0A8E15F296F5BB2D1 }}
 
-      - name: Add GitHub NuGet source
-        run: |
-          dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
-            --name github \
-            --username ${{ github.repository_owner }} \
-            --password ${{ secrets.NUGET_TOKEN }} \
-            --store-password-in-clear-text
-
       - name: Build and push container image to registry
         uses: docker/build-push-action@v3
         with:
@@ -43,6 +35,9 @@ jobs:
           push: true
           tags: practiceregistry.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_2959A89C0D0A4FC2B31CBE1BBA5C0B32 }}/nexorderproductserviceapp:${{ github.sha }}
           file: NexOrder.ProductService/Dockerfile
+          build-args: |
+            GITHUB_USERNAME=${{ github.repository_owner }}
+            GITHUB_TOKEN=${{ secrets.NUGET_TOKEN }}
 
   migrate:
    runs-on: ubuntu-latest
