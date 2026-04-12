@@ -56,6 +56,14 @@ jobs:
         dotnet tool install --global dotnet-ef --version 8.0.*
         echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
+    - name: Add GitHub NuGet source
+      run: |
+        dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+          --name github \
+          --username ${{ github.repository_owner }} \
+          --password ${{ secrets.NUGET_TOKEN }} \
+          --store-password-in-clear-text
+
     - name: Run EF Core migrations
       env:
         DB_CONNECTION: ${{ secrets.SQL_CONN }}
