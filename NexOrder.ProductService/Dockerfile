@@ -16,6 +16,15 @@ COPY ["NexOrder.ProductService.Domain/NexOrder.ProductService.Domain.csproj", "N
 COPY ["NexOrder.ProductService.Messages/NexOrder.ProductService.Messages.csproj", "NexOrder.ProductService.Messages/"]
 COPY ["NexOrder.ProductService.Shared/NexOrder.ProductService.Shared.csproj", "NexOrder.ProductService.Shared/"]
 COPY ["NexOrder.ProductService.Infrastructure/NexOrder.ProductService.Infrastructure.csproj", "NexOrder.ProductService.Infrastructure/"]
+
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
+
+RUN dotnet nuget add source https://nuget.pkg.github.com/$GITHUB_USERNAME/index.json \
+    --name github \
+    --username $GITHUB_USERNAME \
+    --password $GITHUB_TOKEN \
+    --store-password-in-clear-text
 RUN dotnet restore "./NexOrder.ProductService/NexOrder.ProductService.csproj"
 COPY . .
 WORKDIR "/src/NexOrder.ProductService"
