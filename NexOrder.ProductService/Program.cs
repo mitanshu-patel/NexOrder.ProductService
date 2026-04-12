@@ -1,23 +1,16 @@
-using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Azure.Functions.Worker.Builder;
-using Microsoft.Azure.Functions.Worker.OpenTelemetry;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using NexOrder.Framework.Core;
+using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService;
 using NexOrder.ProductService.Application;
-using NexOrder.ProductService.Application.Common;
-using NexOrder.ProductService.Application.Registrations;
-using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
-using NexOrder.ProductService.Infrastructure.Services;
-using OpenTelemetry;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
+using System.Reflection;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
@@ -33,11 +26,18 @@ builder.ConfigureFunctionsWebApplication();
 
 var appInsightsConnection = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-builder.Services.AddNexOrderCustomLogging(isDevelopment, appInsightsConnection);
+builder.Services.AddNexOrderCustomLogging(isDevelopment, "NexOrder.ProductService", appInsightsConnection);
+builder.Services.AddMessageDeliveryService(options =>
+{
+    options.ServiceBusConnectionString = configuration["ServiceBusConnectionString"] 
+        ?? configuration.GetConnectionString("ServiceBusConnectionString") 
+        ?? string.Empty;
+#if DEBUG
+    options.WebProxyAddress = Environment.GetEnvironmentVariable("WebProxy") ?? string.Empty;
+#endif
+});
 
-builder.Services.RegisterHandlers();
-builder.Services.AddScoped<IMediator, Mediator>();
-builder.Services.AddSingleton<IMessageDeliveryService, MessageDeliveryService>();
+builder.Services.RegisterHandlers(Assembly.Load("NexOrder.ProductService.Application"));
 var connectionString = ConnectionStringsHelper.GetDbConnectionString();
 builder.Services.AddDbContext<ProductsContext>(
     v => v.UseSqlServer(connectionString,

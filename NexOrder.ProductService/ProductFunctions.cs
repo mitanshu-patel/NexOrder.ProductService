@@ -4,14 +4,14 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using NexOrder.ProductService.Application.Common;
+using NexOrder.Framework.Core.Common;
+using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.DeleteProduct;
 using NexOrder.ProductService.Application.Products.GetProduct;
 using NexOrder.ProductService.Application.Products.ResyncProducts;
 using NexOrder.ProductService.Application.Products.SearchProducts;
 using NexOrder.ProductService.Application.Products.UpdateProduct;
-using NexOrder.ProductService.Shared.Common;
 using System.Net;
 
 namespace NexOrder.ProductService;

@@ -39,37 +39,5 @@ namespace NexOrder.ProductService
             .WithSerializer(new FusionCacheSystemTextJsonSerializer())
             .WithDistributedCache(builder.Services.BuildServiceProvider().GetRequiredService<IDistributedCache>());
         }
-
-        public static void AddNexOrderCustomLogging(this IServiceCollection services, bool isDevelopment, string? loggingConnection)
-        {
-            services
-            .AddOpenTelemetry()
-            .ConfigureResource(v => v.AddService("NexOrder.ProductService"))
-            .UseFunctionsWorkerDefaults()
-            .WithTracing(builder => {
-                builder
-                    .AddHttpClientInstrumentation()
-                    .AddAspNetCoreInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
-                    .AddAzureMonitorTraceExporter(o => {
-                        o.ConnectionString = loggingConnection;
-                    });
-            });
-
-            services.AddLogging(v =>
-            {
-                if (isDevelopment)
-                {
-                    v.AddConsole();
-                }
-                v.AddOpenTelemetry(options =>
-                {
-                    options.AddAzureMonitorLogExporter(o => o.ConnectionString = loggingConnection);
-
-                    options.IncludeFormattedMessage = true;
-                    options.IncludeScopes = true;
-                });
-            });
-        }
     }
 }

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using NexOrder.ProductService.Application.Common;
+using NexOrder.Framework.Core.Common;
+using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.ProductEvents.UpdateProductsCache;
 using NexOrder.ProductService.Messages.Commands;
-using NexOrder.ProductService.Shared.Common;
 using System.Text.Json;
 
 namespace NexOrder.ProductService

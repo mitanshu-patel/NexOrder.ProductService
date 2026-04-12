@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NexOrder.ProductService.Application.Products.UpdateProduct
+﻿namespace NexOrder.ProductService.Application.Products.UpdateProduct
 {
     public record UpdateProductResult;
 }

@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
-using NexOrder.ProductService.Application.Common;
+using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Shared.Common;
 

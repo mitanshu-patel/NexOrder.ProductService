@@ -1,20 +1,12 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using NexOrder.ProductService.Application.Common;
+using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService.Application.Products.SearchProducts.DTOs;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Shared.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace NexOrder.ProductService.Application.Products.SearchProducts
 {
@@ -23,7 +15,6 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
         private readonly ILogger<SearchProductsHandler> logger;
         private readonly IProductRepo productRepo;
         private readonly ICacheService cacheService;
-        //private readonly SemaphoreSlim cacheLock;
 
         public SearchProductsHandler(ILogger<SearchProductsHandler> logger, IProductRepo productRepo, ICacheService cacheService)
         {

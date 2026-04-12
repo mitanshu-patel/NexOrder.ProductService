@@ -2,14 +2,11 @@
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NexOrder.ProductService.Application.Common;
+using NexOrder.Framework.Core.Common;
+
+//using NexOrder.ProductService.Application.Common;
 using NexOrder.ProductService.Application.Products.GetProduct.DTOs;
-using NexOrder.ProductService.Shared.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+//using NexOrder.ProductService.Shared.Common;
 
 namespace NexOrder.ProductService.Application.Products.GetProduct
 {
