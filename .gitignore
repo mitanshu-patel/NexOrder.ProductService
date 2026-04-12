@@ -17,3 +17,4 @@
 /bin/Debug
 /obj/Debug
 /NexOrder.ProductService.Messages/obj/Debug/net8.0
+/.env

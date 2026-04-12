@@ -28,6 +28,12 @@ services:
     build:
       context: .
       dockerfile: NexOrder.ProductService/Dockerfile
+      args:
+      # comes from .env file as follows, is mainly for custom package nuget source:
+      # GITHUB_USERNAME=github_username
+      # GITHUB_TOKEN=github_token
+        - GITHUB_USERNAME=$GITHUB_USERNAME
+        - GITHUB_TOKEN=$GITHUB_TOKEN
     ports:
       - 7023:80
     env_file:
@@ -40,6 +46,7 @@ services:
         # DB_PASSWORD=db_password!
         # ConnectionStrings__ServiceBusConnectionString=connectionstring_for_servicebus
         # RunMigration=true
+        # APPLICATIONINSIGHTS_CONNECTION_STRING=connectionstring_for_application_insights
     depends_on:
       - nexordersproductssql
       - nexorderredis
