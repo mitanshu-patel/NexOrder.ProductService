@@ -180,6 +180,37 @@ Benefits:
 
 ---
 
+## Private Nuget Packages
+
+This project depends on the **NexOrder.Framework** package, which is hosted via GitHub Packages. To successfully build the project in a GitHub Actions environment, the workflow must be configured to authenticate with the private NuGet source.
+
+### GitHub Actions Workflow Update
+
+An additional step is required before the `dotnet restore` command to register the private source using the `GITHUB_TOKEN`.
+
+Add the following step to your `.github/workflows/main_nexorder-productservice.yml` file:
+
+```yaml
+- name: Add Private NuGet Source
+  run: |
+    dotnet nuget add source "[https://nuget.pkg.github.com/mitanshu-patel/index.json](https://nuget.pkg.github.com/mitanshu-patel/index.json)" \
+      --name "github" \
+      --username "${{ github.actor }}" \
+      --password "${{ secrets.GITHUB_TOKEN }}" \
+      --store-password-in-clear-text
+
+- name: Restore dependencies
+  run: dotnet restore
+```
+
+### Local Development
+
+For local development, developer will need add new Nuget source with the url of index.json as mentioned above and use PAT(Personal Access Token) created via Developer settings, for more refer ```Readme.md``` of **NexOrder.Framework**.
+
+---
+
+
+
 ## ⚙️ Local Development (without Docker)
 
 ### Prerequisites
@@ -251,6 +282,8 @@ docker run --rm -p 8080:80 \
   -e ConnectionStrings__ServiceBusConnectionString="<servicebus-connection-string>" \
   -e RedisCacheOptions_Configuration="<redis-connection-string>" \
   -e RedisCacheOptions_InstanceName="<redis-instance-name>" \
+  -e GITHUB_USERNAME="<github-username>" \
+  -e GITHUB_TOKEN="<personal-access-token>"
   nexorder-productservice:local
 ```
 
