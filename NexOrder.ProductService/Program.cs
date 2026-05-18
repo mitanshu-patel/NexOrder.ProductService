@@ -46,6 +46,10 @@ builder.Services.AddScoped<IProductRepo, ProductRepo>();
 builder.AddRedisCache(
     configuration["RedisCacheOptions_Configuration"],
     configuration["RedisCacheOptions_InstanceName"]);
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<ProductsContext>("ProductsDb")
+    .AddRedis(configuration["RedisCacheOptions_Configuration"], name: "RedisCache");
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("RunMigration"))
 {
