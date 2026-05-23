@@ -106,6 +106,21 @@ When a popular cache key expires, multiple concurrent requests often try to re-g
 - **Implementation:** By utilizing **Probabilistic Propagation** and **Optimistic Locking**, FusionCache ensures that only one factory execution happens at a time for a specific key, while other concurrent requests wait for the result or receive a slightly stale (fail-safe) value.
 
 ------------------------------------------------------------------------
+
+### 🏥 Health Checks Implementation
+To ensure system resilience and support container orchestration platforms (like Kubernetes or Azure Container Apps), this service exposes detailed health monitoring endpoints.
+
+#### Configured Dependencies
+The service monitors the connectivity of three critical infrastructure dependencies:
+ - **Database**: EF Core / SQL Server connectivity check.
+ - **Cache**: Redis distributed cache validation.
+ - **Messaging**: Azure Service Bus queue connectivity.
+
+ **Refer to Program.cs file for Healtchecks middleware registrations**
+ 
+ A separate endpoint for Health check is defined in `HealthFunction.cs` with url: `/health`
+
+------------------------------------------------------------------------
 ### ⏱ Cache Expiry
 
 -   TTL (Time-To-Live) for now 5 minutes is applied to avoid stale data
