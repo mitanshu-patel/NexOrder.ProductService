@@ -116,7 +116,7 @@ The service monitors the connectivity of three critical infrastructure dependenc
  - **Cache**: Redis distributed cache validation.
  - **Messaging**: Azure Service Bus queue connectivity.
 
- **Refer to Program.cs file for Healtchecks middleware registrations**
+ **Refer to Program.cs file for Healthchecks middleware registrations**
  
  A separate endpoint for Health check is defined in `HealthFunction.cs` with url: `/health`
 
