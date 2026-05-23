@@ -10,6 +10,7 @@ using NexOrder.ProductService.Application;
 using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
+using NexOrder.ProductService.Messages.Commands;
 using System.Reflection;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -49,7 +50,8 @@ builder.AddRedisCache(
 builder.Services
     .AddHealthChecks()
     .AddDbContextCheck<ProductsContext>("ProductsDb")
-    .AddRedis(configuration["RedisCacheOptions_Configuration"], name: "RedisCache");
+    .AddRedis(configuration["RedisCacheOptions_Configuration"], name: "RedisCache")
+    .AddAzureServiceBusQueue(configuration.GetConnectionString("ServiceBusConnectionString"), ProductServiceCommand.QueueName, name: "ProductServiceQueue");
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("RunMigration"))
 {
