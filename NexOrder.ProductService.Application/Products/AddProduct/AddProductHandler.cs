@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
+using NexOrder.ProductService.Application.Products.Common;
 using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Messages.Commands;
 using NexOrder.ProductService.Messages.Events;

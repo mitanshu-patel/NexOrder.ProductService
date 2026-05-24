@@ -38,6 +38,14 @@ builder.Services.AddMessageDeliveryService(options =>
 #endif
 });
 
+builder.Services.AddOpenAIService(options =>
+{
+    options.ApiKey = configuration["OpenAIAPIKey"] ?? string.Empty;
+    options.DeploymentName = configuration["OpenAIDeployment"] ?? string.Empty;
+    options.Url = configuration["OpenAIEndpoint"] ?? string.Empty;
+    options.Model = configuration["OpenAIModel"] ?? string.Empty;
+});
+
 builder.Services.RegisterHandlers(Assembly.Load("NexOrder.ProductService.Application"));
 var connectionString = ConnectionStringsHelper.GetDbConnectionString();
 builder.Services.AddDbContext<ProductsContext>(

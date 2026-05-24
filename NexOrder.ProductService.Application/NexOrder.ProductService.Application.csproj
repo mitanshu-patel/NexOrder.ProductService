@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.25" />
-    <PackageReference Include="NexOrder.Framework.Core" Version="1.0.4" />
+    <PackageReference Include="NexOrder.Framework.Core" Version="1.0.7" />
   </ItemGroup>
 
   <ItemGroup>

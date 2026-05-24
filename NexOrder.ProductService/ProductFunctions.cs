@@ -7,8 +7,10 @@ using Newtonsoft.Json;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
+using NexOrder.ProductService.Application.Products.Common;
 using NexOrder.ProductService.Application.Products.DeleteProduct;
 using NexOrder.ProductService.Application.Products.GetProduct;
+using NexOrder.ProductService.Application.Products.QuickAddProduct;
 using NexOrder.ProductService.Application.Products.ResyncProducts;
 using NexOrder.ProductService.Application.Products.SearchProducts;
 using NexOrder.ProductService.Application.Products.UpdateProduct;
@@ -36,6 +38,18 @@ public class ProductFunctions
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         var data = JsonConvert.DeserializeObject<AddProductCommand>(requestBody);
         var result = await this.mediator.SendAsync<AddProductCommand, CustomResponse<AddProductResult>>(data);
+        return result.GetResponse();
+    }
+
+    [Function("QuickAddProduct")]
+    [OpenApiOperation(operationId: "QuickAddProduct", tags: new[] { "QuickAddProduct" }, Description = "Add new product quickly.")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(QuickAddProductCommand))]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AddProductResult))]
+    public async Task<IActionResult> QuickAddProduct([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/products/quick-add")] HttpRequest req)
+    {
+        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var data = JsonConvert.DeserializeObject<QuickAddProductCommand>(requestBody);
+        var result = await this.mediator.SendAsync<QuickAddProductCommand, CustomResponse<AddProductResult>>(data);
         return result.GetResponse();
     }
 
