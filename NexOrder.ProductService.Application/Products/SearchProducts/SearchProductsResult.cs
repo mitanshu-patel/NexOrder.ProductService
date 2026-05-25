@@ -1,4 +1,4 @@
-﻿using NexOrder.ProductService.Application.Products.SearchProducts.DTOs;
+﻿using NexOrder.ProductService.Application.Products.Common.DTOs;
 
 namespace NexOrder.ProductService.Application.Products.SearchProducts
 {

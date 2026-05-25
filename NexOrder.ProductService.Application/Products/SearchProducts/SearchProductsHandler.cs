@@ -3,7 +3,7 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NexOrder.Framework.Core.Common;
-using NexOrder.ProductService.Application.Products.SearchProducts.DTOs;
+using NexOrder.ProductService.Application.Products.Common.DTOs;
 using NexOrder.ProductService.Application.Services;
 using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Shared.Common;
@@ -21,7 +21,6 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
             this.logger = logger;
             this.productRepo = productRepo;
             this.cacheService = cacheService;
-            //this.cacheLock = new SemaphoreSlim(1, 1);
         }
 
         protected async override Task<CustomResponse<SearchProductsResult>> ExecuteCommandAsync(SearchProductsQuery command)
