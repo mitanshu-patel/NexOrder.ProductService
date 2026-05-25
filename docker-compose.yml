@@ -29,9 +29,9 @@ services:
       context: .
       dockerfile: NexOrder.ProductService/Dockerfile
       args:
-      # comes from .env file as follows, is mainly for custom package nuget source:
-      # GITHUB_USERNAME=github_username
-      # GITHUB_TOKEN=github_token
+        # comes from .env file as follows, is mainly for custom package nuget source:
+        # GITHUB_USERNAME=github_username
+        # GITHUB_TOKEN=github_token
         - GITHUB_USERNAME=$GITHUB_USERNAME
         - GITHUB_TOKEN=$GITHUB_TOKEN
     ports:
@@ -39,14 +39,20 @@ services:
     env_file:
       - local.env
       # Following config will be needed in local.env file:-
-        # DB_SERVER_NAME=nexordersproductssql
-        # ACCEPT_EULA=Y
-        # SA_PASSWORD=db_password
-        # DB_NAME=db_name
-        # DB_PASSWORD=db_password!
-        # ConnectionStrings__ServiceBusConnectionString=connectionstring_for_servicebus
-        # RunMigration=true
-        # APPLICATIONINSIGHTS_CONNECTION_STRING=connectionstring_for_application_insights
+      # DB_SERVER_NAME=nexordersproductssql
+      # ACCEPT_EULA=Y
+      # SA_PASSWORD=db_password
+      # DB_NAME=db_name
+      # DB_PASSWORD=db_password!
+      # ConnectionStrings__ServiceBusConnectionString=connectionstring_for_servicebus
+      # RunMigration=true
+      # APPLICATIONINSIGHTS_CONNECTION_STRING=connectionstring_for_application_insights
+      # RedisCacheOptions_Configuration=<<redis-url>>
+      # RedisCacheOptions_InstanceName=<<instance-name>>
+      # OpenAIAPIKey=<<api-key>>
+      # OpenAIDeployment=<<deployment-name>>
+      # OpenAIEndpoint=<<endpoint-url>>
+      # OpenAIModel=<<model-name>>
     depends_on:
       - nexordersproductssql
       - nexorderredis
