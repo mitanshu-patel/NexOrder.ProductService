@@ -23,6 +23,7 @@ The service intentionally keeps business functionality simple (CRUD) while demon
 - JWT-based authentication (validated at API-M)
 - **Azure Service Bus (event-driven messaging)**
 - GitHub Actions CI/CD
+- Azure Open AI for quick add product
 - Cloud-ready configuration & secrets handling
 - **Docker + containerized deployments**
 
@@ -105,6 +106,20 @@ When a popular cache key expires, multiple concurrent requests often try to re-g
 - **Solution:** We use **FusionCache's** built-in "Fail-Safe" and "Soft-Expiration" mechanisms.
 - **Implementation:** By utilizing **Probabilistic Propagation** and **Optimistic Locking**, FusionCache ensures that only one factory execution happens at a time for a specific key, while other concurrent requests wait for the result or receive a slightly stale (fail-safe) value.
 
+
+------------------------------------------------------------------------
+### ⏱ Cache Expiry
+
+-   TTL (Time-To-Live) for now 5 minutes is applied to avoid stale data
+-   Ensures eventual consistency
+
+------------------------------------------------------------------------
+
+### ⚙️ Technology Used
+
+-   IFusionCache abstraction
+-   Redis via StackExchange.Redis
+
 ------------------------------------------------------------------------
 
 ### 🏥 Health Checks Implementation
@@ -121,19 +136,40 @@ The service monitors the connectivity of three critical infrastructure dependenc
  A separate endpoint for Health check is defined in `HealthFunction.cs` with url: `/health`
 
 ------------------------------------------------------------------------
-### ⏱ Cache Expiry
 
--   TTL (Time-To-Live) for now 5 minutes is applied to avoid stale data
--   Ensures eventual consistency
+### 🤖 AI-Powered "Quick Add" Feature
+The `NexOrder.ProductService` leverages the `NexOrder.Framework` OpenAI integration to allow for natural language product entry. This feature transforms unstructured user input into valid, persisted database entities.
+
+#### Endpoint Overview
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | /products/quick-add | Processes a text description to create a product record. |
+
+#### Integration Details
+
+The service implements a specialized workflow to handle AI requests:
+
+ - **Request Parsing:** Receives a QuickAddProductRequest containing a raw string (e.g., "Add a 24-inch 4K monitor for 350 dollars").
+ - **LLM Processing:** The service calls the IOpenAIService from the framework. It uses a specific system prompt to instruct the model to return structured JSON data mapping to our Product model.
+ - **Entity Mapping:** The AI-generated JSON is deserialized into a AddProductCommand model, after successfully deserializing it, we can AddProductHandler from QuickAddProductHandler, this because both handlers have almost same logic so no point of duplicating logic in both handlers, so we can handler internally.
+ - **Persistence:** The ApplicationDbContext saves the newly created object to the SQL database.
+
+**Refer to Program.cs file for OpenAI middleware registrations**
+
+#### Usage Example
+ 
+ Request:
+ ```json
+{
+  "userMessage": "Add a product as Ergonomic Office Chair, black color, price 199.99"
+}
+```
+
+#### Workflow Logic (Internal):
+The service ensures that even if the user forgets specific fields, the AI attempts to fill default values rather than infering any details by itself which wasn't given in user prompt, significantly reducing manual data entry overhead. Also validates the generated response, for example if user has prompted about "Add Ergonomic Chair", now this prompt doesn't have any product description and any price, which is mandatory in Product entity, so AI will identify this and replace those fields with default values and the underlying handler will validated parsed request and will throw bad request in this case.
 
 ------------------------------------------------------------------------
-
-### ⚙️ Technology Used
-
--   IFusionCache abstraction
--   Redis via StackExchange.Redis
-
----
 
 ## 🛠️ Tech Stack
 
@@ -142,11 +178,12 @@ The service monitors the connectivity of three critical infrastructure dependenc
 - **Entity Framework Core**
 - **MediatR**
 - **Azure SQL**
+- **Azure Open AI**
 - **Azure API Management**
 - **Azure Service Bus**
 - **Azure Managed Redis**
 - **Docker / Docker Compose**
-- **GitHub Actions**
+- **GitHub Actions** 
 
 ---
 
@@ -297,6 +334,10 @@ docker run --rm -p 8080:80 \
   -e ConnectionStrings__ServiceBusConnectionString="<servicebus-connection-string>" \
   -e RedisCacheOptions_Configuration="<redis-connection-string>" \
   -e RedisCacheOptions_InstanceName="<redis-instance-name>" \
+  -e OpenAIAPIKey="<your-api-key>" \
+  -e OpenAIDeployment="<open-ai-deployment-name>" \
+  -e OpenAIEndpoint="<open-ai-endpoint-url>" \
+  -e OpenAIModel="<open-ai-model-name>" \
   -e GITHUB_USERNAME="<github-username>" \
   -e GITHUB_TOKEN="<personal-access-token>"
   nexorder-productservice:local
@@ -331,6 +372,10 @@ Common keys:
 - `ConnectionStrings__ServiceBusConnectionString`
 - `RedisCacheOptions_Configuration`
 - `RedisCacheOptions_InstanceName`
+- `OpenAIAPIKey`
+- `OpenAIDeployment`
+- `OpenAIEndpoint`
+- `OpenAIModel`
 
 ---
 
@@ -401,6 +446,7 @@ Recommended App Settings (examples):
 | POST | /products/search | Search products |
 | GET | /products/{id} | Get product by ID |
 | POST | /products | Create new product |
+| POST | /products/quick-add | Add product based on user prompt |
 | PUT | /products/{id} | Update product |
 | DELETE | /products/{id} | Delete product |
 
