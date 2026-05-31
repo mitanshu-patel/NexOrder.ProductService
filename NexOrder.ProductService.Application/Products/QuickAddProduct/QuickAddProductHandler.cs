@@ -5,6 +5,9 @@ using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.Common;
 using NexOrder.ProductService.Domain.Entities;
+using NexOrder.ProductService.Shared.Common;
+using Polly;
+using Polly.Registry;
 using System.Reflection;
 using System.Text;
 
@@ -15,12 +18,14 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
         private readonly IOpenAIService openAIService;
         private readonly IProductRepo productRepo;
         private readonly IMediator mediator;
+        private readonly ResiliencePipeline pipeline;
 
-        public QuickAddProductHandler(IOpenAIService openAIService, IProductRepo productRepo, IMediator mediator)
+        public QuickAddProductHandler(IOpenAIService openAIService, IProductRepo productRepo, IMediator mediator, ResiliencePipelineProvider<string> pipelineProvider)
         {
             this.openAIService = openAIService;
             this.productRepo = productRepo;
             this.mediator = mediator;
+            this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
         }
         protected override async Task<CustomResponse<AddProductResult>> ExecuteCommandAsync(QuickAddProductCommand command)
         {
@@ -40,7 +45,11 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
             messageBuilder.AppendLine("}");
             messageBuilder.AppendLine("In case of any missing or invalid properties, please provide default values, don't generate any details by yourself, strictly stick to what user has provided");
             messageBuilder.AppendLine("For example if price is missing keep it's default value as per datatype which would be 0.00 if float/double, similary if name not mentioned then keep as empty string.");
-            var result = await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
+            
+            var result = await this.pipeline.ExecuteAsync(async response =>
+                        {
+                            return await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
+                        });
             if (!string.IsNullOrEmpty(result))
             {
                 var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<AddProductCommand>(result);

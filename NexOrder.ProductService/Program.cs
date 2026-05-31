@@ -11,7 +11,10 @@ using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
 using NexOrder.ProductService.Messages.Commands;
+using NexOrder.ProductService.Shared.Common;
+using Polly;
 using System.Reflection;
+using System.Threading.RateLimiting;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
@@ -36,6 +39,18 @@ builder.Services.AddMessageDeliveryService(options =>
 #if DEBUG
     options.WebProxyAddress = Environment.GetEnvironmentVariable("WebProxy") ?? string.Empty;
 #endif
+});
+
+builder.Services.AddResiliencePipeline(ProductServiceConstants.OpenAIResiliencePipeline, pipelineBuilder =>
+{
+    pipelineBuilder.AddRateLimiter(new FixedWindowRateLimiter(
+        new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 1,              // Max 1 request
+            Window = TimeSpan.FromMinutes(1), // Per 1 minute
+            QueueLimit = 0,               // If we hit 1, allow 1 more to wait in line
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        }));
 });
 
 builder.Services.AddOpenAIService(options =>
