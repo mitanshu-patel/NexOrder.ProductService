@@ -8,17 +8,23 @@ using FluentValidation;
 using NexOrder.Framework.Core.Contracts;
 using System.Reflection;
 using System.Text;
+using Polly;
+using Polly.Registry;
+using NexOrder.ProductService.Shared.Common;
+using Polly.RateLimiting;
 public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProductsQuery, CustomResponse<QuickSearchProductsResult>>
 {
     private readonly IProductRepo productRepo;
     private readonly ILogger<QuickSearchProductsHandler> logger;
     private readonly IOpenAIService openAIService;
+    private readonly ResiliencePipeline pipeline;
 
-    public QuickSearchProductsHandler(IProductRepo productRepo, ILogger<QuickSearchProductsHandler> logger, IOpenAIService openAIService)
+    public QuickSearchProductsHandler(IProductRepo productRepo, ILogger<QuickSearchProductsHandler> logger, IOpenAIService openAIService, ResiliencePipelineProvider<string> pipelineProvider)
     {
         this.productRepo = productRepo;
         this.logger = logger;
         this.openAIService = openAIService;
+        this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
     }
 
     protected async override Task<CustomResponse<QuickSearchProductsResult>> ExecuteCommandAsync(QuickSearchProductsQuery command)
@@ -48,19 +54,30 @@ public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProducts
                 messageBuilder.AppendLine("For example if sort by mentioned as 'sort by price descending' then SortBy should be 'price' and SortDescending should be true. If no sorting details mentioned then keep SortBy as null which means no specific sorting and it will be sorted by created date in descending order by default.");
                 messageBuilder.AppendLine("For SortBy property valid values are 'name', 'price' and 'createdat'. For example if sort by mentioned as 'sort by name ascending' then SortBy should be 'name' and SortDescending should be false.");
                 messageBuilder.AppendLine("For example if page size not mentioned then keep as 10. For nullable types you can keep as null if not mentioned in the input message.");
-                var result = await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
-                if (!string.IsNullOrEmpty(result))
+                return await this.pipeline.ExecuteAsync(async response =>
                 {
-                    var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<SearchProductsCriteria>(result);
-                    if (deserializedResult == null)                    {
-                        return CustomHttpResult.BadRequest<QuickSearchProductsResult>("Failed to search products using quick search. Please check the input message and try again.", null);
+                    var result =  await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<SearchProductsCriteria>(result);
+                        if (deserializedResult == null)
+                        {
+                            return CustomHttpResult.BadRequest<QuickSearchProductsResult>("Failed to search products using quick search. Please check the input message and try again.", null);
+                        }
+                        productsList = await this.SearchProducts(deserializedResult);
                     }
-                    productsList = await this.SearchProducts(deserializedResult);
-                }
 
-                this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", productsList.Count);
+                    this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", productsList.Count);
 
-                return CustomHttpResult.Ok(new QuickSearchProductsResult(productsList));
+                    return CustomHttpResult.Ok(new QuickSearchProductsResult(productsList));
+                });
+            }
+            catch (RateLimiterRejectedException rex)
+            {
+            // Reason behind manually handling this exception is here is that centrally registering this on middleware needs fixed return type however in this architecture, type is defined based on mediator used on Function.
+            // So, to return appropriate response for this specific scenario, we are handling this exception here in handler itself.
+            this.logger.LogWarning(rex, "QuickSearchProductsHandler: request was rate limited with message:{message}", rex.Message);
+                return CustomHttpResult.TooManyRequests<QuickSearchProductsResult>("Too many requests. Please try again later.");
             }
             catch (Exception ex)
             {

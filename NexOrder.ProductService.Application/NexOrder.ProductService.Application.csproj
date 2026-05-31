@@ -10,7 +10,7 @@
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.25" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
-    <PackageReference Include="NexOrder.Framework.Core" Version="1.0.7" />
+    <PackageReference Include="NexOrder.Framework.Core" Version="1.0.10" />
   </ItemGroup>
 
   <ItemGroup>

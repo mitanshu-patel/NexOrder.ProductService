@@ -8,6 +8,7 @@ using NexOrder.ProductService.Application.Products.Common;
 using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Shared.Common;
 using Polly;
+using Polly.RateLimiting;
 using Polly.Registry;
 using System.Reflection;
 using System.Text;
@@ -52,21 +53,28 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
                 messageBuilder.AppendLine("In case of any missing or invalid properties, please provide default values, don't generate any details by yourself, strictly stick to what user has provided");
                 messageBuilder.AppendLine("For example if price is missing keep it's default value as per datatype which would be 0.00 if float/double, similary if name not mentioned then keep as empty string.");
                 this.logger.LogInformation("QuickAddProductHandler: ExecuteCommandAsync execution started");
-                var result = await this.pipeline.ExecuteAsync(async response =>
+                return await this.pipeline.ExecuteAsync(async response =>
                 {
-                    return await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
-                });
-                if (!string.IsNullOrEmpty(result))
-                {
-                    var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<AddProductCommand>(result);
-                    if (deserializedResult == null)
+                    var result = await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
+                    if (!string.IsNullOrEmpty(result))
                     {
-                        return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                        var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<AddProductCommand>(result);
+                        if (deserializedResult == null)
+                        {
+                            return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                        }
+                        return await this.mediator.SendAsync<AddProductCommand, CustomResponse<AddProductResult>>(deserializedResult);
                     }
-                    return await this.mediator.SendAsync<AddProductCommand, CustomResponse<AddProductResult>>(deserializedResult);
-                }
 
-                return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                    return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                });
+            }
+            catch (RateLimiterRejectedException rex)
+            {
+                // Reason behind manually handling this exception is here is that centrally registering this on middleware needs fixed return type however in this architecture, type is defined based on mediator used on Function.
+                // So, to return appropriate response for this specific scenario, we are handling this exception here in handler itself.
+                this.logger.LogWarning(rex, "QuickAddProductHandler: request was rate limited with message:{message}", rex.Message);
+                return CustomHttpResult.TooManyRequests<AddProductResult>("Too many requests. Please try again later.");
             }
             catch (Exception ex)
             {

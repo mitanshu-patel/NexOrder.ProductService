@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,17 +42,6 @@ builder.Services.AddMessageDeliveryService(options =>
 #endif
 });
 
-builder.Services.AddResiliencePipeline(ProductServiceConstants.OpenAIResiliencePipeline, pipelineBuilder =>
-{
-    pipelineBuilder.AddRateLimiter(new FixedWindowRateLimiter(
-        new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 1,              // Max 1 request
-            Window = TimeSpan.FromMinutes(1), // Per 1 minute
-            QueueLimit = 0,               // If we hit 1, allow 1 more to wait in line
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-        }));
-});
 
 builder.Services.AddOpenAIService(options =>
 {
@@ -59,6 +49,25 @@ builder.Services.AddOpenAIService(options =>
     options.DeploymentName = configuration["OpenAIDeployment"] ?? string.Empty;
     options.Url = configuration["OpenAIEndpoint"] ?? string.Empty;
     options.Model = configuration["OpenAIModel"] ?? string.Empty;
+});
+
+builder.Services.AddResiliencePipeline(ProductServiceConstants.OpenAIResiliencePipeline, (pipelineBuilder, context) =>
+{
+    pipelineBuilder.AddRateLimiter(new FixedWindowRateLimiter(
+                                new FixedWindowRateLimiterOptions
+                                {
+                                    PermitLimit = Convert.ToInt16(configuration["RateLimitOptions_Permit"] ?? "1"),
+                                    Window = TimeSpan.FromMinutes(Convert.ToInt16(configuration["RateLimitOptions_WindowInMinutes"] ?? "1")),
+                                    QueueLimit = Convert.ToInt16(configuration["RateLimitOptions_Queue"] ?? "0"),
+                                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                                }))
+    .AddRetry(new Polly.Retry.RetryStrategyOptions
+    {
+        ShouldHandle = new PredicateBuilder().Handle<HttpRequestException>(),
+        Delay = TimeSpan.FromSeconds(2),
+        UseJitter = true,
+        MaxRetryAttempts = 3,
+    });
 });
 
 builder.Services.RegisterHandlers(Assembly.Load("NexOrder.ProductService.Application"));
