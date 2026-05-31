@@ -100,6 +100,18 @@ public class ProductFunctions
         return result.GetResponse();
     }
 
+    [Function("QuickSearchProducts")]
+    [OpenApiOperation(operationId: "QuickSearchProducts", tags: new[] { "QuickSearchProducts" }, Description = "Quick search products for given criteria.")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(QuickSearchProductsQuery))]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(QuickSearchProductsResult))]
+    public async Task<IActionResult> QuickSearchProducts([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/products/quick-search")] HttpRequest req)
+    {
+        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var data = JsonConvert.DeserializeObject<QuickSearchProductsQuery>(requestBody);
+        var result = await this.mediator.SendAsync<QuickSearchProductsQuery, CustomResponse<QuickSearchProductsResult>>(data);
+        return result.GetResponse();
+    }
+
 
     [Function("UpdateProduct")]
     [OpenApiOperation(operationId: "UpdateProduct", tags: new[] { "UpdateProduct" }, Description = "Update product details for given product id.")]

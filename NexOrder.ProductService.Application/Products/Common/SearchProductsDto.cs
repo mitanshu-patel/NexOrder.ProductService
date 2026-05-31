@@ -1,4 +1,4 @@
-﻿namespace NexOrder.ProductService.Application.Products.SearchProducts.DTOs
+﻿namespace NexOrder.ProductService.Application.Products.Common.DTOs
 {
     public record SearchProductsDto
     {

@@ -18,3 +18,6 @@
 /obj/Debug
 /NexOrder.ProductService.Messages/obj/Debug/net8.0
 /.env
+NexOrder.ProductService.Messages/obj/Debug/net8.0/NexOrder.ProductService.Messages.AssemblyInfo.cs
+NexOrder.ProductService.Messages/obj/Debug/net8.0/NexOrder.ProductService.Messages.AssemblyInfoInputs.cache
+NexOrder.ProductService.Messages/obj/Debug/net8.0/NexOrder.ProductService.Messages.GeneratedMSBuildEditorConfig.editorconfig
