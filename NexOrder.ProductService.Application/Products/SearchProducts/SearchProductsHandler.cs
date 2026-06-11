@@ -67,7 +67,9 @@ namespace NexOrder.ProductService.Application.Products.SearchProducts
 
                 if (isCacheable)
                 {
-                    await this.cacheService.SetValueAsync(cacheKey, productsList);
+                    await this.cacheService.SetValueAsync(cacheKey, productsList, new Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions{
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), // currently keeping 5 minutes, we can add this as app configuration later.
+                    });
                 }
 
                 this.logger.LogInformation("SearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", totalRecords);

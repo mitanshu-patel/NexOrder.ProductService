@@ -36,12 +36,28 @@ namespace NexOrder.ProductService.Infrastructure.Services
 
         public void SetValue<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
         {
-            this.distributedCache.Set(cacheKey, cacheValue);
+            FusionCacheEntryOptions? fusionCacheOptions = null;
+            if (cacheOptions != null)
+            {
+                fusionCacheOptions = new FusionCacheEntryOptions
+                {
+                    Duration = TimeSpan.FromSeconds(cacheOptions.AbsoluteExpirationRelativeToNow?.TotalMinutes ?? 0)
+                };
+            }
+            this.distributedCache.Set(cacheKey, cacheValue, fusionCacheOptions);
         }
 
         public async Task SetValueAsync<T>(string cacheKey, T cacheValue, DistributedCacheEntryOptions? cacheOptions = null)
         {
-            await this.distributedCache.SetAsync(cacheKey, cacheValue);
+            FusionCacheEntryOptions? fusionCacheOptions = null;
+            if (cacheOptions != null)
+            {
+                fusionCacheOptions = new FusionCacheEntryOptions
+                {
+                    Duration = TimeSpan.FromSeconds(cacheOptions.AbsoluteExpirationRelativeToNow?.TotalMinutes ?? 0)
+                };
+            }
+            await this.distributedCache.SetAsync(cacheKey, cacheValue, fusionCacheOptions);
         }
     }
 }
