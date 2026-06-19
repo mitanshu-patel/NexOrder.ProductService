@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.SemanticKernel;
 using NexOrder.Framework.Core;
 using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService;
@@ -42,6 +43,23 @@ builder.Services.AddMessageDeliveryService(options =>
 #endif
 });
 
+builder.Services.AddAzureOpenAIChatCompletion(
+    deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
+    apiKey: configuration["OpenAIAPIKey"] ?? string.Empty,
+    endpoint: configuration["OpenAIEndpoint"] ?? string.Empty,
+    modelId: configuration["OpenAIModel"] ?? string.Empty);
+
+builder.Services.AddScoped<SearchProductPlugin>();
+builder.Services.AddKernel().AddAzureOpenAIChatCompletion(
+    deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
+    apiKey: configuration["OpenAIAPIKey"] ?? string.Empty,
+    endpoint: configuration["OpenAIEndpoint"] ?? string.Empty,
+    modelId: configuration["OpenAIModel"] ?? string.Empty);
+
+builder.Services.AddScoped<KernelPlugin>(sp=>{
+    var pluginInstance = sp.GetRequiredService<SearchProductPlugin>();
+    return KernelPluginFactory.CreateFromObject(pluginInstance, "SearchProductPlugin");
+});   
 
 builder.Services.AddOpenAIService(options =>
 {
