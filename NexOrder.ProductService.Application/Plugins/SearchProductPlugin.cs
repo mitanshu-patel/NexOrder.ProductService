@@ -4,6 +4,8 @@ using Microsoft.SemanticKernel;
 using NexOrder.ProductService.Application;
 using NexOrder.ProductService.Application.Products.Common.DTOs;
 
+namespace NexOrder.ProductService.Application.Plugins;
+
 [Description("Queries product information from the product database.")]
 public class SearchProductPlugin
 {

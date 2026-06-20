@@ -10,6 +10,7 @@ using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.Common;
+using NexOrder.ProductService.Application.Products.Common.DTOs;
 using NexOrder.ProductService.Application.Products.DeleteProduct;
 using NexOrder.ProductService.Application.Products.GetProduct;
 using NexOrder.ProductService.Application.Products.QuickAddProduct;
@@ -17,6 +18,7 @@ using NexOrder.ProductService.Application.Products.ResyncProducts;
 using NexOrder.ProductService.Application.Products.SearchProducts;
 using NexOrder.ProductService.Application.Products.UpdateProduct;
 using System.Net;
+using System.Text.Json;
 
 namespace NexOrder.ProductService;
 
@@ -120,25 +122,30 @@ public class ProductFunctions
         return result.GetResponse();
     }
 
-    // [Function("QuickSearchProductsDemo")]
-    // [OpenApiOperation(operationId: "QuickSearchProductsDemo", tags: new[] { "QuickSearchProductsDemo" }, Description = "Quick search products for given criteria.")]
-    // [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(QuickSearchProductsQuery))]
-    // [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(QuickSearchProductsResult))]
-    // public async Task<IActionResult> QuickSearchProductsDemo([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/products/quick-search-demo")] HttpRequest req)
-    // {
-    //     string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-    //     var data = JsonConvert.DeserializeObject<QuickSearchProductsQuery>(requestBody);
-    //     var chatMessages = new ChatHistory();
-    //     PromptExecutionSettings settings = new() 
-    //     { 
-    //         FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() 
-    //     };
-    //     chatMessages.AddUserMessage("You are a product search engine. You have access to the product database and can search products based on various criteria like name, description, price range etc. When a search query is provided, you will return a list of products that match the search criteria.");
-    //     chatMessages.AddUserMessage($"Given is the prompt for searching products: {data.SearchMessage}. Please generate a JSON object with appropriate properties and values based on the search message for searching products in the product database. The JSON object should have following properties: SearchText, MinPrice, MaxPrice, SpecificPrices (which is a list of decimal values), SortBy and SortDescending. For example if search message is 'Find me products with price between 100 and 500' then the JSON object should have MinPrice as 100 and MaxPrice as 500. If search message is 'Find me products with specific prices 100, 200 and 300' then the JSON object should have SpecificPrices as [100, 200, 300]. If search message is 'Find me products with name containing laptop' then the JSON object should have SearchText as 'laptop'. If search message is 'Find me products sorted by price in descending order' then the JSON object should have SortBy as 'price' and SortDescending as true.");
-    //     var response = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
-    //     var result = await this.mediator.SendAsync<QuickSearchProductsQuery, CustomResponse<QuickSearchProductsResult>>(data);
-    //     return new OkObjectResult(new QuickSearchProductsResult([]));
-    // }
+    //[Function("QuickSearchProductsDemo")]
+    //[OpenApiOperation(operationId: "QuickSearchProductsDemo", tags: new[] { "QuickSearchProductsDemo" }, Description = "Quick search products for given criteria.")]
+    //[OpenApiRequestBody(contentType: "application/json", bodyType: typeof(QuickSearchProductsQuery))]
+    //[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(QuickSearchProductsResult))]
+    //public async Task<IActionResult> QuickSearchProductsDemo([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/products/quick-search-demo")] HttpRequest req)
+    //{
+    //    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+    //    var data = JsonConvert.DeserializeObject<QuickSearchProductsQuery>(requestBody);
+    //    var chatMessages = new ChatHistory();
+    //    PromptExecutionSettings settings = new()
+    //    {
+    //        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+    //    };
+    //    chatMessages.AddSystemMessage("You are a product search assistant. Use the search-product function to find products based on the user's query.");
+    //    chatMessages.AddUserMessage($"Search for products: {data.SearchMessage}");
+    //    chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
+        
+    //    var response = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
+        
+    //    // The plugin function will be automatically called and results will be in the response
+    //    var content = System.Text.Json.JsonSerializer.Deserialize<List<SearchProductsDto>>(response.Content ?? string.Empty) ?? [];
+        
+    //    return new OkObjectResult(new { Response = new QuickSearchProductsResult(content) });
+    //}
 
 
     [Function("UpdateProduct")]

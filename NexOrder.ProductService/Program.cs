@@ -9,6 +9,7 @@ using NexOrder.Framework.Core;
 using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService;
 using NexOrder.ProductService.Application;
+using NexOrder.ProductService.Application.Plugins;
 using NexOrder.ProductService.Infrastructure;
 using NexOrder.ProductService.Infrastructure.Helpers;
 using NexOrder.ProductService.Infrastructure.Repos;
@@ -50,16 +51,24 @@ builder.Services.AddAzureOpenAIChatCompletion(
     modelId: configuration["OpenAIModel"] ?? string.Empty);
 
 builder.Services.AddScoped<SearchProductPlugin>();
+builder.Services.AddScoped<AddProductPlugin>();
 builder.Services.AddKernel().AddAzureOpenAIChatCompletion(
     deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
     apiKey: configuration["OpenAIAPIKey"] ?? string.Empty,
     endpoint: configuration["OpenAIEndpoint"] ?? string.Empty,
     modelId: configuration["OpenAIModel"] ?? string.Empty);
 
-builder.Services.AddScoped<KernelPlugin>(sp=>{
+builder.Services.AddScoped<KernelPlugin>(sp =>
+{
     var pluginInstance = sp.GetRequiredService<SearchProductPlugin>();
     return KernelPluginFactory.CreateFromObject(pluginInstance, "SearchProductPlugin");
-});   
+});
+
+builder.Services.AddScoped<KernelPlugin>(sp =>
+{
+    var pluginInstance = sp.GetRequiredService<AddProductPlugin>();
+    return KernelPluginFactory.CreateFromObject(pluginInstance, "AddProductPlugin");
+});
 
 builder.Services.AddOpenAIService(options =>
 {

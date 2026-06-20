@@ -1,82 +1,64 @@
-using NexOrder.Framework.Core.Common;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NexOrder.ProductService.Application.Products.Common.DTOs;
-using NexOrder.ProductService.Application;
-using FluentValidation.Results;
-using FluentValidation;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
+using NexOrder.ProductService.Application;
+using NexOrder.ProductService.Application.Plugins;
+using NexOrder.ProductService.Application.Products.Common.DTOs;
+using NexOrder.ProductService.Shared.Common;
+using Polly;
+using Polly.RateLimiting;
+using Polly.Registry;
 using System.Reflection;
 using System.Text;
-using Polly;
-using Polly.Registry;
-using NexOrder.ProductService.Shared.Common;
-using Polly.RateLimiting;
 public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProductsQuery, CustomResponse<QuickSearchProductsResult>>
 {
     private readonly IProductRepo productRepo;
     private readonly ILogger<QuickSearchProductsHandler> logger;
-    private readonly IOpenAIService openAIService;
     private readonly ResiliencePipeline pipeline;
+    private readonly Kernel kernel;
 
-    public QuickSearchProductsHandler(IProductRepo productRepo, ILogger<QuickSearchProductsHandler> logger, IOpenAIService openAIService, ResiliencePipelineProvider<string> pipelineProvider)
+    private readonly IChatCompletionService chatCompletionService;
+
+    public QuickSearchProductsHandler(IProductRepo productRepo, ILogger<QuickSearchProductsHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel, IChatCompletionService chatCompletionService)
     {
         this.productRepo = productRepo;
         this.logger = logger;
-        this.openAIService = openAIService;
         this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
+        this.kernel = kernel;
+        this.chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
     }
 
     protected async override Task<CustomResponse<QuickSearchProductsResult>> ExecuteCommandAsync(QuickSearchProductsQuery command)
     {
         try
             {
-                this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution started");
-                Type type = typeof(SearchProductsCriteria);
-                PropertyInfo[] properties = type.GetProperties();
-                this.openAIService.InitializeOpenAIService();
-                this.openAIService.SetSystemMessage("You are a helpful assistant for quickly searching products in the system. You will receive a message describing the product search criteria, and you need to generate a JSON object with the appropriate properties and their types for searching products in our system.");
-                var messageBuilder = new StringBuilder();
-                messageBuilder.AppendLine("Following is the message received for quick searching products:");
-                messageBuilder.AppendLine(command.SearchMessage);
-                messageBuilder.AppendLine("Generate a JSON object with the following properties and their types for searching products:");
-                var products = this.productRepo.GetProducts();
-                messageBuilder.AppendLine("{");
-                List<SearchProductsDto> productsList = [];
-                foreach (PropertyInfo property in properties)
-                {
-                    messageBuilder.AppendLine($"\"{property.Name}\": \"{property.PropertyType}\",");
-                }
+               this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution started");
+               return await this.pipeline.ExecuteAsync(async response => {
+                   var chatMessages = new ChatHistory();
+                   PromptExecutionSettings settings = new()
+                   {
+                       FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                   };
+                   chatMessages.AddSystemMessage("You are a product search assistant. Use the search-product function to find products based on the user's query.");
+                   chatMessages.AddUserMessage($"Search for products: {command.SearchMessage}");
+                   chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
 
-                messageBuilder.AppendLine("}");
-                messageBuilder.AppendLine("In case of any missing or invalid properties, please provide default values, don't generate any details by yourself, strictly stick to what user has provided");
-                messageBuilder.AppendLine("For example if search text not mentioned then keep as empty string. If price range mentioned as 'between 100 and 500' then MinPrice should be 100 and MaxPrice should be 500. If specific prices mentioned as 'specific prices 100, 200, 300' then SpecificPrices should be [100, 200, 300].");
-                messageBuilder.AppendLine("For example if sort by mentioned as 'sort by price descending' then SortBy should be 'price' and SortDescending should be true. If no sorting details mentioned then keep SortBy as null which means no specific sorting and it will be sorted by created date in descending order by default.");
-                messageBuilder.AppendLine("For SortBy property valid values are 'name', 'price' and 'createdat'. For example if sort by mentioned as 'sort by name ascending' then SortBy should be 'name' and SortDescending should be false.");
-                messageBuilder.AppendLine("For example if page size not mentioned then keep as 10. For nullable types you can keep as null if not mentioned in the input message.");
-                return await this.pipeline.ExecuteAsync(async response =>
-                {
-                    var result =  await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<SearchProductsCriteria>(result);
-                        if (deserializedResult == null)
-                        {
-                            return CustomHttpResult.BadRequest<QuickSearchProductsResult>("Failed to search products using quick search. Please check the input message and try again.", null);
-                        }
-                        productsList = await this.SearchProducts(deserializedResult);
-                    }
+                   var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
+                   var productsList = System.Text.Json.JsonSerializer.Deserialize<List<SearchProductsDto>>(result.Content ?? string.Empty) ?? [];
 
-                    this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution completed and found {count} products", productsList.Count);
-
-                    return CustomHttpResult.Ok(new QuickSearchProductsResult(productsList));
-                });
+                   return CustomHttpResult.Ok(new QuickSearchProductsResult(productsList));
+               });
             }
             catch (RateLimiterRejectedException rex)
             {
-            // Reason behind manually handling this exception is here is that centrally registering this on middleware needs fixed return type however in this architecture, type is defined based on mediator used on Function.
-            // So, to return appropriate response for this specific scenario, we are handling this exception here in handler itself.
-            this.logger.LogWarning(rex, "QuickSearchProductsHandler: request was rate limited with message:{message}", rex.Message);
+                // Reason behind manually handling this exception is here is that centrally registering this on middleware needs fixed return type however in this architecture, type is defined based on mediator used on Function.
+                // So, to return appropriate response for this specific scenario, we are handling this exception here in handler itself.
+                this.logger.LogWarning(rex, "QuickSearchProductsHandler: request was rate limited with message:{message}", rex.Message);
                 return CustomHttpResult.TooManyRequests<QuickSearchProductsResult>("Too many requests. Please try again later.");
             }
             catch (Exception ex)
