@@ -1,10 +1,13 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.Common;
+using NexOrder.ProductService.Application.Products.Common.DTOs;
 using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Shared.Common;
 using Polly;
@@ -17,56 +20,45 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
 {
     internal class QuickAddProductHandler : RequestHandlerBase<QuickAddProductCommand, CustomResponse<AddProductResult>>
     {
-        private readonly IOpenAIService openAIService;
         private readonly IProductRepo productRepo;
         private readonly IMediator mediator;
         private readonly ILogger<QuickAddProductHandler> logger;
         private readonly ResiliencePipeline pipeline;
+        private readonly Kernel kernel;
+        private readonly IChatCompletionService chatCompletionService;
 
-        public QuickAddProductHandler(IOpenAIService openAIService, IProductRepo productRepo, IMediator mediator, ILogger<QuickAddProductHandler> logger, ResiliencePipelineProvider<string> pipelineProvider)
+        public QuickAddProductHandler(IProductRepo productRepo, IMediator mediator, ILogger<QuickAddProductHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel, IChatCompletionService chatCompletionService)
         {
-            this.openAIService = openAIService;
             this.productRepo = productRepo;
             this.mediator = mediator;
             this.logger = logger;
             this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
+            this.kernel = kernel;
+            this.chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
         }
         protected override async Task<CustomResponse<AddProductResult>> ExecuteCommandAsync(QuickAddProductCommand command)
         {
             try
             {
                 this.logger.LogInformation("QuickAddProductHandler: ExecuteCommandAsync execution started");
-                Type type = typeof(AddProductCommand);
-                PropertyInfo[] properties = type.GetProperties();
-                this.openAIService.InitializeOpenAIService();
-                this.openAIService.SetSystemMessage("You are a helpful assistant for quickly adding a product to the system. You will receive a message describing the product details, and you need to generate a JSON object with the appropriate properties and their types for creating a product in our system.");
-                var messageBuilder = new StringBuilder();
-                messageBuilder.AppendLine("Following is the message received for quick adding a product:");
-                messageBuilder.AppendLine(command.ProductAddMessage);
-                messageBuilder.AppendLine("Generate a JSON object with the following properties and their types for creating a product:");
-                messageBuilder.AppendLine("{");
-                foreach (PropertyInfo property in properties)
-                {
-                    messageBuilder.AppendLine($"\"{property.Name}\": \"{property.PropertyType}\",");
-                }
-                messageBuilder.AppendLine("}");
-                messageBuilder.AppendLine("In case of any missing or invalid properties, please provide default values, don't generate any details by yourself, strictly stick to what user has provided");
-                messageBuilder.AppendLine("For example if price is missing keep it's default value as per datatype which would be 0.00 if float/double, similary if name not mentioned then keep as empty string.");
-                this.logger.LogInformation("QuickAddProductHandler: ExecuteCommandAsync execution started");
-                return await this.pipeline.ExecuteAsync(async response =>
-                {
-                    var result = await this.openAIService.GenerateResponseAsyc(messageBuilder.ToString());
-                    if (!string.IsNullOrEmpty(result))
+                return await this.pipeline.ExecuteAsync(async response => {
+                    var chatMessages = new ChatHistory();
+                    PromptExecutionSettings settings = new()
                     {
-                        var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<AddProductCommand>(result);
-                        if (deserializedResult == null)
-                        {
-                            return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
-                        }
-                        return await this.mediator.SendAsync<AddProductCommand, CustomResponse<AddProductResult>>(deserializedResult);
-                    }
+                        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                    };
+                    chatMessages.AddSystemMessage("You are a product addition assistant. Use the add-product function to add products based on the user's query.");
+                    chatMessages.AddUserMessage($"Add product: {command.ProductAddMessage}");
+                    chatMessages.AddDeveloperMessage($"Return add product response in JSON format considering output of CustomResponse<AddProductResult>");
 
-                    return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                    var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
+                    
+                    var addResponse = System.Text.Json.JsonSerializer.Deserialize<CustomResponse<AddProductResult>>(result.Content ?? string.Empty);
+                    if (addResponse == null)
+                    {
+                        return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);
+                    }
+                    return addResponse;
                 });
             }
             catch (RateLimiterRejectedException rex)

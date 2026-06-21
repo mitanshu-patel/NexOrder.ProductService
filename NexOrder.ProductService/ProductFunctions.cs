@@ -122,32 +122,6 @@ public class ProductFunctions
         return result.GetResponse();
     }
 
-    //[Function("QuickSearchProductsDemo")]
-    //[OpenApiOperation(operationId: "QuickSearchProductsDemo", tags: new[] { "QuickSearchProductsDemo" }, Description = "Quick search products for given criteria.")]
-    //[OpenApiRequestBody(contentType: "application/json", bodyType: typeof(QuickSearchProductsQuery))]
-    //[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(QuickSearchProductsResult))]
-    //public async Task<IActionResult> QuickSearchProductsDemo([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/products/quick-search-demo")] HttpRequest req)
-    //{
-    //    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-    //    var data = JsonConvert.DeserializeObject<QuickSearchProductsQuery>(requestBody);
-    //    var chatMessages = new ChatHistory();
-    //    PromptExecutionSettings settings = new()
-    //    {
-    //        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-    //    };
-    //    chatMessages.AddSystemMessage("You are a product search assistant. Use the search-product function to find products based on the user's query.");
-    //    chatMessages.AddUserMessage($"Search for products: {data.SearchMessage}");
-    //    chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
-        
-    //    var response = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
-        
-    //    // The plugin function will be automatically called and results will be in the response
-    //    var content = System.Text.Json.JsonSerializer.Deserialize<List<SearchProductsDto>>(response.Content ?? string.Empty) ?? [];
-        
-    //    return new OkObjectResult(new { Response = new QuickSearchProductsResult(content) });
-    //}
-
-
     [Function("UpdateProduct")]
     [OpenApiOperation(operationId: "UpdateProduct", tags: new[] { "UpdateProduct" }, Description = "Update product details for given product id.")]
     [OpenApiParameter(name: "productId", Type = typeof(int), Required = true)]

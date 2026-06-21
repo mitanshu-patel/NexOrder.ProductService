@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using NexOrder.Framework.Core;
 using NexOrder.Framework.Core.Common;
 using NexOrder.ProductService;
@@ -44,39 +45,26 @@ builder.Services.AddMessageDeliveryService(options =>
 #endif
 });
 
-builder.Services.AddAzureOpenAIChatCompletion(
-    deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
+
+builder.Services.RegisterHandlers(Assembly.Load("NexOrder.ProductService.Application"));
+var connectionString = ConnectionStringsHelper.GetDbConnectionString();
+builder.Services.AddDbContext<ProductsContext>(
+    v => v.UseSqlServer(connectionString,
+    b => b.MigrationsAssembly("NexOrder.ProductService.Infrastructure")));
+builder.Services.AddScoped<IProductRepo, ProductRepo>();
+builder.AddRedisCache(
+    configuration["RedisCacheOptions_Configuration"],
+    configuration["RedisCacheOptions_InstanceName"]);
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<ProductsContext>("ProductsDb")
+    .AddRedis(configuration["RedisCacheOptions_Configuration"], name: "RedisCache")
+    .AddAzureServiceBusQueue(configuration.GetConnectionString("ServiceBusConnectionString"), ProductServiceCommand.QueueName, name: "ProductServiceQueue");
+
+builder.AddKernelWithPlugins(deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
     apiKey: configuration["OpenAIAPIKey"] ?? string.Empty,
-    endpoint: configuration["OpenAIEndpoint"] ?? string.Empty,
+    endPoint: configuration["OpenAIEndpoint"] ?? string.Empty,
     modelId: configuration["OpenAIModel"] ?? string.Empty);
-
-builder.Services.AddScoped<SearchProductPlugin>();
-builder.Services.AddScoped<AddProductPlugin>();
-builder.Services.AddKernel().AddAzureOpenAIChatCompletion(
-    deploymentName: configuration["OpenAIDeployment"] ?? string.Empty,
-    apiKey: configuration["OpenAIAPIKey"] ?? string.Empty,
-    endpoint: configuration["OpenAIEndpoint"] ?? string.Empty,
-    modelId: configuration["OpenAIModel"] ?? string.Empty);
-
-builder.Services.AddScoped<KernelPlugin>(sp =>
-{
-    var pluginInstance = sp.GetRequiredService<SearchProductPlugin>();
-    return KernelPluginFactory.CreateFromObject(pluginInstance, "SearchProductPlugin");
-});
-
-builder.Services.AddScoped<KernelPlugin>(sp =>
-{
-    var pluginInstance = sp.GetRequiredService<AddProductPlugin>();
-    return KernelPluginFactory.CreateFromObject(pluginInstance, "AddProductPlugin");
-});
-
-builder.Services.AddOpenAIService(options =>
-{
-    options.ApiKey = configuration["OpenAIAPIKey"] ?? string.Empty;
-    options.DeploymentName = configuration["OpenAIDeployment"] ?? string.Empty;
-    options.Url = configuration["OpenAIEndpoint"] ?? string.Empty;
-    options.Model = configuration["OpenAIModel"] ?? string.Empty;
-});
 
 builder.Services.AddResiliencePipeline(ProductServiceConstants.OpenAIResiliencePipeline, (pipelineBuilder, context) =>
 {
@@ -97,20 +85,6 @@ builder.Services.AddResiliencePipeline(ProductServiceConstants.OpenAIResilienceP
     });
 });
 
-builder.Services.RegisterHandlers(Assembly.Load("NexOrder.ProductService.Application"));
-var connectionString = ConnectionStringsHelper.GetDbConnectionString();
-builder.Services.AddDbContext<ProductsContext>(
-    v => v.UseSqlServer(connectionString,
-    b => b.MigrationsAssembly("NexOrder.ProductService.Infrastructure")));
-builder.Services.AddScoped<IProductRepo, ProductRepo>();
-builder.AddRedisCache(
-    configuration["RedisCacheOptions_Configuration"],
-    configuration["RedisCacheOptions_InstanceName"]);
-builder.Services
-    .AddHealthChecks()
-    .AddDbContextCheck<ProductsContext>("ProductsDb")
-    .AddRedis(configuration["RedisCacheOptions_Configuration"], name: "RedisCache")
-    .AddAzureServiceBusQueue(configuration.GetConnectionString("ServiceBusConnectionString"), ProductServiceCommand.QueueName, name: "ProductServiceQueue");
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("RunMigration"))
 {
