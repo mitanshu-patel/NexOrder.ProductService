@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application;
@@ -40,13 +41,14 @@ public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProducts
                this.logger.LogInformation("QuickSearchProductsHandler: ExecuteCommandAsync execution started");
                return await this.pipeline.ExecuteAsync(async response => {
                    var chatMessages = new ChatHistory();
-                   PromptExecutionSettings settings = new()
-                   {
-                       FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-                   };
+                   OpenAIPromptExecutionSettings settings = new()
+                    {
+                        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                        ResponseFormat = typeof(List<SearchProductsDto>),
+                    };
                    chatMessages.AddSystemMessage("You are a product search assistant. Use the search-product function to find products based on the user's query.");
                    chatMessages.AddUserMessage($"Search for products: {command.SearchMessage}");
-                   chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
+                //    chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
 
                    var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
                    var productsList = System.Text.Json.JsonSerializer.Deserialize<List<SearchProductsDto>>(result.Content ?? string.Empty) ?? [];

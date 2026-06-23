@@ -3,6 +3,7 @@ using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
 using NexOrder.ProductService.Application.Products.AddProduct;
@@ -43,13 +44,15 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
                 this.logger.LogInformation("QuickAddProductHandler: ExecuteCommandAsync execution started");
                 return await this.pipeline.ExecuteAsync(async response => {
                     var chatMessages = new ChatHistory();
-                    PromptExecutionSettings settings = new()
+                    OpenAIPromptExecutionSettings settings = new()
                     {
-                        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                        ResponseFormat = typeof(CustomResponse<AddProductResult>),
                     };
+                   
                     chatMessages.AddSystemMessage("You are a product addition assistant. Use the add-product function to add products based on the user's query.");
                     chatMessages.AddUserMessage($"Add product: {command.ProductAddMessage}");
-                    chatMessages.AddDeveloperMessage($"Return add product response in JSON format considering output of CustomResponse<AddProductResult>");
+                    // chatMessages.AddDeveloperMessage($"Return add product response in JSON format considering output of CustomResponse<AddProductResult>");
 
                     var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
                     
