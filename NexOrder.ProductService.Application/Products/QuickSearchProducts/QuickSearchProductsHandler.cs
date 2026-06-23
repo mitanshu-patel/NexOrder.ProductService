@@ -1,33 +1,25 @@
 using FluentValidation;
 using FluentValidation.Results;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using NexOrder.Framework.Core.Common;
-using NexOrder.Framework.Core.Contracts;
-using NexOrder.ProductService.Application;
-using NexOrder.ProductService.Application.Plugins;
 using NexOrder.ProductService.Application.Products.Common.DTOs;
 using NexOrder.ProductService.Shared.Common;
 using Polly;
 using Polly.RateLimiting;
 using Polly.Registry;
-using System.Reflection;
-using System.Text;
 public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProductsQuery, CustomResponse<QuickSearchProductsResult>>
 {
-    private readonly IProductRepo productRepo;
     private readonly ILogger<QuickSearchProductsHandler> logger;
     private readonly ResiliencePipeline pipeline;
     private readonly Kernel kernel;
 
     private readonly IChatCompletionService chatCompletionService;
 
-    public QuickSearchProductsHandler(IProductRepo productRepo, ILogger<QuickSearchProductsHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel, IChatCompletionService chatCompletionService)
+    public QuickSearchProductsHandler(ILogger<QuickSearchProductsHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel)
     {
-        this.productRepo = productRepo;
         this.logger = logger;
         this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
         this.kernel = kernel;

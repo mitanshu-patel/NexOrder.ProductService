@@ -6,32 +6,23 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using NexOrder.Framework.Core.Common;
 using NexOrder.Framework.Core.Contracts;
-using NexOrder.ProductService.Application.Products.AddProduct;
 using NexOrder.ProductService.Application.Products.Common;
-using NexOrder.ProductService.Application.Products.Common.DTOs;
-using NexOrder.ProductService.Domain.Entities;
 using NexOrder.ProductService.Shared.Common;
 using Polly;
 using Polly.RateLimiting;
 using Polly.Registry;
-using System.Reflection;
-using System.Text;
 
 namespace NexOrder.ProductService.Application.Products.QuickAddProduct
 {
     internal class QuickAddProductHandler : RequestHandlerBase<QuickAddProductCommand, CustomResponse<AddProductResult>>
     {
-        private readonly IProductRepo productRepo;
-        private readonly IMediator mediator;
         private readonly ILogger<QuickAddProductHandler> logger;
         private readonly ResiliencePipeline pipeline;
         private readonly Kernel kernel;
         private readonly IChatCompletionService chatCompletionService;
 
-        public QuickAddProductHandler(IProductRepo productRepo, IMediator mediator, ILogger<QuickAddProductHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel, IChatCompletionService chatCompletionService)
+        public QuickAddProductHandler(ILogger<QuickAddProductHandler> logger, ResiliencePipelineProvider<string> pipelineProvider, Kernel kernel)
         {
-            this.productRepo = productRepo;
-            this.mediator = mediator;
             this.logger = logger;
             this.pipeline = pipelineProvider.GetPipeline(ProductServiceConstants.OpenAIResiliencePipeline);
             this.kernel = kernel;
