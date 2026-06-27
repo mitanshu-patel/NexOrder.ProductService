@@ -43,11 +43,17 @@ namespace NexOrder.ProductService.Application.Products.QuickAddProduct
                    
                     chatMessages.AddSystemMessage("You are a product addition assistant. Use the add-product function to add products based on the user's query.");
                     chatMessages.AddUserMessage($"Add product: {command.ProductAddMessage}");
-                    // chatMessages.AddDeveloperMessage($"Return add product response in JSON format considering output of CustomResponse<AddProductResult>");
 
                     var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
                     
-                    var addResponse = System.Text.Json.JsonSerializer.Deserialize<CustomResponse<AddProductResult>>(result.Content ?? string.Empty);
+                    // Configure JsonSerializerOptions to handle enums as strings and case-insensitive property names
+                    var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                    };
+                    
+                    var addResponse = System.Text.Json.JsonSerializer.Deserialize<CustomResponse<AddProductResult>>(result.Content ?? string.Empty, jsonOptions);
                     if (addResponse == null)
                     {
                         return CustomHttpResult.BadRequest<AddProductResult>("Failed to add product using quick add. Please check the input message and try again.", null);

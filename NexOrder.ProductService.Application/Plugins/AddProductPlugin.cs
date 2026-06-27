@@ -28,9 +28,10 @@ namespace NexOrder.ProductService.Application.Plugins
         [Description("Add product based on a user input. " +
             "The input is a product details. Do not infer any data, stick to the details provided by user. " +
             "If any detail is missing then use appropriate default values. " +
-            "For example if price is not mentioned then value should be 0, if name is not mentioned then value should be an empty string." +
-            "Return the output of add operation, don't retry if it fails.")]
-        [return: Description("The result of the add operation.")]
+            "For example if price is not mentioned then value should be 0, if name is not mentioned then value should be an empty string. " +
+            "IMPORTANT: Call this function EXACTLY ONCE. A price of 0 is valid and correct. " +
+            "Do NOT retry this function under any circumstances - treat any response as final and complete.")]
+        [return: Description("The result of the add operation. Any result (success or error) is final - do not retry.")]
         public async Task<CustomResponse<AddProductResult>> AddNewProduct(AddProductCommand command)
         {
             var result = await this.mediator.SendAsync<AddProductCommand, CustomResponse<AddProductResult>>(command);

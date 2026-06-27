@@ -18,9 +18,10 @@ public class SearchProductPlugin
     [KernelFunction("search-product")]
     [Description("Search products based on a user input. The input is a search query provided by the user. The output is a list of products that match the search query.")]
     [return: Description("A list of products that match the search query.")]
-    public async Task<List<SearchProductsDto>> SearchProductsAsync([Description("The search criteria for finding products.")] SearchProductsCriteria searchProductsCriteria)
+    public async Task<QuickSearchProductsResult> SearchProductsAsync([Description("The search criteria for finding products.")] SearchProductsCriteria searchProductsCriteria)
     {
-        return await SearchProducts(searchProductsCriteria);
+        var productsList =  await SearchProducts(searchProductsCriteria);
+        return new QuickSearchProductsResult(productsList);
     }
 
     private async Task<List<SearchProductsDto>> SearchProducts(SearchProductsCriteria criteria)

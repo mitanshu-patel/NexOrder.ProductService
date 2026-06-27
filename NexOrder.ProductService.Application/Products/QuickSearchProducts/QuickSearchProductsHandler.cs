@@ -36,16 +36,15 @@ public class QuickSearchProductsHandler : RequestHandlerBase<QuickSearchProducts
                    OpenAIPromptExecutionSettings settings = new()
                     {
                         FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-                        ResponseFormat = typeof(List<SearchProductsDto>),
+                        ResponseFormat = typeof(QuickSearchProductsResult),
                     };
                    chatMessages.AddSystemMessage("You are a product search assistant. Use the search-product function to find products based on the user's query.");
                    chatMessages.AddUserMessage($"Search for products: {command.SearchMessage}");
-                //    chatMessages.AddDeveloperMessage($"Return only list in JSON format with type List<{nameof(SearchProductsDto)}>");
 
                    var result = await this.chatCompletionService.GetChatMessageContentAsync(chatMessages, executionSettings: settings, kernel: this.kernel);
-                   var productsList = System.Text.Json.JsonSerializer.Deserialize<List<SearchProductsDto>>(result.Content ?? string.Empty) ?? [];
+                   var productsResult = System.Text.Json.JsonSerializer.Deserialize<QuickSearchProductsResult>(result.Content ?? string.Empty) ?? new([]);
 
-                   return CustomHttpResult.Ok(new QuickSearchProductsResult(productsList));
+                   return CustomHttpResult.Ok(productsResult);
                });
             }
             catch (RateLimiterRejectedException rex)
