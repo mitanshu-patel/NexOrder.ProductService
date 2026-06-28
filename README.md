@@ -23,7 +23,7 @@ The service intentionally keeps business functionality simple (CRUD) while demon
 - JWT-based authentication (validated at API-M)
 - **Azure Service Bus (event-driven messaging)**
 - GitHub Actions CI/CD
-- Azure Open AI for quick add product
+- AI Enabled Product Add and Search APIs using Microsoft Semantic Kernel
 - Cloud-ready configuration & secrets handling
 - **Docker + containerized deployments**
 
