@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.77.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.77.0" />
-    <PackageReference Include="NexOrder.Framework.Core" Version="1.0.10" />
+    <PackageReference Include="NexOrder.Framework.Core" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
