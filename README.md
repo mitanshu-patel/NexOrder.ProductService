@@ -137,38 +137,27 @@ The service monitors the connectivity of three critical infrastructure dependenc
 
 ------------------------------------------------------------------------
 
-### 🤖 AI-Powered "Quick Add" Feature
-The `NexOrder.ProductService` leverages the `NexOrder.Framework` OpenAI integration to allow for natural language product entry. This feature transforms unstructured user input into valid, persisted database entities.
+## 🤖 AI-Powered Capabilities
 
-#### Endpoint Overview
+`NexOrder.ProductService` leverages **Microsoft Semantic Kernel** to provide intelligent, natural language capabilities that bridge the gap between unstructured user intents and structured domain operations.
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| POST | /products/quick-add | Processes a text description to create a product record. |
+Instead of traditional hardcoded logic, the service uses an extensible, plugin-based architecture where the kernel orchestrates native C# plugins to execute business logic.
 
-#### Integration Details
+---
 
-The service implements a specialized workflow to handle AI requests:
+### 1. "Quick Add" Feature (`AddProductPlugin`)
+This feature allows users to create new products instantly using natural language inputs (e.g., *"Add a premium leather wallet with a sleek design for $45, category Accessories, stock 150"*). 
 
- - **Request Parsing:** Receives a QuickAddProductRequest containing a raw string (e.g., "Add a 24-inch 4K monitor for 350 dollars").
- - **LLM Processing:** The service calls the IOpenAIService from the framework. It uses a specific system prompt to instruct the model to return structured JSON data mapping to our Product model.
- - **Entity Mapping:** The AI-generated JSON is deserialized into a AddProductCommand model, after successfully deserializing it, we can AddProductHandler from QuickAddProductHandler, this because both handlers have almost same logic so no point of duplicating logic in both handlers, so we can handler internally.
- - **Persistence:** The ApplicationDbContext saves the newly created object to the SQL database.
+* **Intent Extraction:** The kernel processes the unstructured text, automatically extracting and mapping relevant product attributes (`Name`, `Description`, `Price`).
+* **Deterministic Execution:** The data is passed directly into the **`AddProductPlugin`**, ensuring that the actual validation and persistence layers remain strictly controlled by native C# business services.
 
-**Refer to Program.cs file for OpenAI middleware registrations**
+### 2. Semantic Product Search (`SearchProductsPlugin`)
+Finding products is no longer limited to exact keyword matching or rigid database filters. This feature allows users to discover products via natural, conversational queries (e.g., *"Find me gadgets under $100 that are currently in stock"* or *"Show me popular summer clothes"*).
 
-#### Usage Example
- 
- Request:
- ```json
-{
-  "userMessage": "Add a product as Ergonomic Office Chair, black color, price 199.99"
-}
-```
+* **Intelligent Filtering:** The **`SearchProductsPlugin`** utilizes native kernel functions to analyze the user's criteria, intelligently translating context (like price thresholds, stock availability, and categories) into structured database query filters.
+* **Context-Aware Results:** The AI ensures relevant product matching based on the semantic intent behind the search query, rather than just simple text matching.
 
-#### Workflow Logic (Internal):
-The service ensures that even if the user forgets specific fields, the AI attempts to fill default values rather than infering any details by itself which wasn't given in user prompt, significantly reducing manual data entry overhead. Also validates the generated response, for example if user has prompted about "Add Ergonomic Chair", now this prompt doesn't have any product description and any price, which is mandatory in Product entity, so AI will identify this and replace those fields with default values and the underlying handler will validated parsed request and will throw bad request in this case.
-
+   **Refer to Program.cs file for OpenAI and Kernel registrations**
 ------------------------------------------------------------------------
 
 ## 🛠️ Tech Stack
@@ -179,6 +168,7 @@ The service ensures that even if the user forgets specific fields, the AI attemp
 - **MediatR**
 - **Azure SQL**
 - **Azure Open AI**
+- **Microsoft Semantic Kernel**
 - **Azure API Management**
 - **Azure Service Bus**
 - **Azure Managed Redis**
